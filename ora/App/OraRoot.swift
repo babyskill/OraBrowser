@@ -11,6 +11,16 @@ final class PrivacyMode: ObservableObject {
     }
 }
 
+struct CatalogRootDependencies {
+    let modelContainer: ModelContainer
+    let modelContext: ModelContext
+    let tabManager: TabManager
+    let historyManager: HistoryManager
+    let downloadManager: DownloadManager
+    let mediaController: MediaController
+    let privacyMode: PrivacyMode
+}
+
 struct OraRoot: View {
     @StateObject private var appState = AppState()
     @StateObject private var keyModifierListener = KeyModifierListener()
@@ -30,9 +40,12 @@ struct OraRoot: View {
     let tabContext: ModelContext
     let historyContext: ModelContext
     let downloadContext: ModelContext
+    let isLegacyPath: Bool
     @State private var window: NSWindow?
 
+    // Legacy init — creates its own ModelContainer per window
     init(isPrivate: Bool = false) {
+        self.isLegacyPath = true
         _privacyMode = StateObject(wrappedValue: PrivacyMode(isPrivate: isPrivate))
 
         let container: ModelContainer
@@ -75,6 +88,21 @@ struct OraRoot: View {
         )
     }
 
+    // Catalog path init — receives pre-created dependencies
+    init(dependencies: CatalogRootDependencies) {
+        self.isLegacyPath = false
+        _privacyMode = StateObject(wrappedValue: dependencies.privacyMode)
+
+        self.tabContext = dependencies.modelContext
+        self.downloadContext = dependencies.modelContext
+        self.historyContext = dependencies.modelContext
+
+        _historyManager = StateObject(wrappedValue: dependencies.historyManager)
+        _mediaController = StateObject(wrappedValue: dependencies.mediaController)
+        _tabManager = StateObject(wrappedValue: dependencies.tabManager)
+        _downloadManager = StateObject(wrappedValue: dependencies.downloadManager)
+    }
+
     var body: some View {
         BrowserView()
             .background(WindowReader(window: $window))
@@ -108,6 +136,12 @@ struct OraRoot: View {
             .withTheme()
             .enableInjection()
             .onAppear {
+                if isLegacyPath, ApplicationGraph.shared.catalogRuntimeEnabled {
+                    DispatchQueue.main.async {
+                        window?.close()
+                    }
+                    return
+                }
                 downloadManager.toastManager = toastManager
                 Task {
                     let containerIDs = await MainActor.run {

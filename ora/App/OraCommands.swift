@@ -8,13 +8,31 @@ struct OraCommands: Commands {
     @AppStorage("ui.toolbar.showfullurl") private var showFullURL: Bool = false
     @Environment(\.openWindow) private var openWindow
 
+    let catalogRuntimeEnabled: Bool
+
+    init(catalogRuntimeEnabled: Bool = false) {
+        self.catalogRuntimeEnabled = catalogRuntimeEnabled
+    }
+
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
-            Button("New Window") { openWindow(id: "normal") }
+            if catalogRuntimeEnabled {
+                Button("New Window") {
+                    ApplicationGraph.shared.commandRouter.openCatalog(isPrivate: false)
+                }
                 .keyboardShortcut(KeyboardShortcuts.Window.new.keyboardShortcut)
 
-            Button("New Private Window") { openWindow(id: "private") }
+                Button("New Private Window") {
+                    ApplicationGraph.shared.commandRouter.openCatalog(isPrivate: true)
+                }
                 .keyboardShortcut(KeyboardShortcuts.Window.newPrivate.keyboardShortcut)
+            } else {
+                Button("New Window") { openWindow(id: "normal") }
+                    .keyboardShortcut(KeyboardShortcuts.Window.new.keyboardShortcut)
+
+                Button("New Private Window") { openWindow(id: "private") }
+                    .keyboardShortcut(KeyboardShortcuts.Window.newPrivate.keyboardShortcut)
+            }
 
             Button("New Tab") {
                 NotificationCenter.default.post(name: .showLauncher, object: NSApp.keyWindow)
@@ -31,6 +49,11 @@ struct OraCommands: Commands {
             }.keyboardShortcut(KeyboardShortcuts.Tabs.close.keyboardShortcut)
 
             Button("Close Window") {
+                if catalogRuntimeEnabled {
+                    if ApplicationGraph.shared.commandRouter.isFocusedWindowCatalog() {
+                        ApplicationGraph.shared.commandRouter.closeFocusedCatalog()
+                    }
+                }
                 if let keyWindow = NSApp.keyWindow, ["Settings", "Passwords"].contains(keyWindow.title) {
                     keyWindow.performClose(nil)
                 }
@@ -38,6 +61,9 @@ struct OraCommands: Commands {
             .keyboardShortcut("w", modifiers: .command)
             .disabled({
                 guard let keyWindow = NSApp.keyWindow else { return true }
+                if catalogRuntimeEnabled {
+                    if ApplicationGraph.shared.commandRouter.isFocusedWindowCatalog() { return false }
+                }
                 return !["Settings", "Passwords"].contains(keyWindow.title)
             }())
         }
@@ -102,6 +128,9 @@ struct OraCommands: Commands {
 
         CommandMenu("Navigation") {
             Button("Reload Page") {
+                if catalogRuntimeEnabled {
+                    ApplicationGraph.shared.commandRouter.reloadFocusedCatalog()
+                }
                 NotificationCenter.default.post(name: .reloadPage, object: NSApp.keyWindow)
             }
             .keyboardShortcut(KeyboardShortcuts.Navigation.reload.keyboardShortcut)

@@ -12,9 +12,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             Bundle(path: "/Applications/InjectionIII.app/Contents/Resources/macOSInjection.bundle")?.load()
             Bundle(path: "/Applications/InjectionIII.app/Contents/Resources/macOSSwiftUISupport.bundle")?.load()
         #endif
+
+        if ApplicationGraph.shared.catalogRuntimeEnabled {
+            ApplicationGraph.shared.coordinator.start()
+        }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        if ApplicationGraph.shared.catalogRuntimeEnabled {
+            ApplicationGraph.shared.coordinator.handleTerminate()
+            return .terminateLater
+        }
+
         let targetWindow = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isVisible })
         guard let targetWindow else { return .terminateNow }
         NotificationCenter.default.post(name: .quitRequested, object: targetWindow)
@@ -22,7 +31,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        handleIncomingURLs(urls)
+        if ApplicationGraph.shared.catalogRuntimeEnabled {
+            for url in urls {
+                ApplicationGraph.shared.coordinator.handleExternalURL(url)
+            }
+        } else {
+            handleIncomingURLs(urls)
+        }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        if ApplicationGraph.shared.catalogRuntimeEnabled {
+            if !hasVisibleWindows {
+                ApplicationGraph.shared.coordinator.handleReopen()
+            }
+            return true
+        }
+        return true
     }
 
     func getWindow() -> NSWindow? {
@@ -73,6 +98,10 @@ struct OraApp: App {
     private let sharedModelContainer: ModelContainer? =
         try? ModelConfiguration.createOraContainer(isPrivate: false)
 
+    private var catalogRuntimeEnabled: Bool {
+        ApplicationGraph.shared.catalogRuntimeEnabled
+    }
+
     var body: some Scene {
         WindowGroup(id: "normal") {
             OraRoot()
@@ -114,6 +143,6 @@ struct OraApp: App {
         .windowToolbarStyle(UnifiedCompactWindowToolbarStyle())
         .windowResizability(.contentSize)
         .defaultSize(width: 980, height: 640)
-        .commands { OraCommands() }
+        .commands { OraCommands(catalogRuntimeEnabled: catalogRuntimeEnabled) }
     }
 }
