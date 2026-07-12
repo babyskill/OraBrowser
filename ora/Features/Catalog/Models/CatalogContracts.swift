@@ -47,6 +47,8 @@ enum CatalogLifecycleState: String, Codable, Sendable {
     case visible
     case hidden
     case crashed
+    case throttled
+    case hibernated
 }
 
 enum CatalogRestoreDisposition: String, Codable, Sendable {
@@ -207,6 +209,7 @@ enum CatalogWindowEvent {
     case didMiniaturize(CatalogID, generation: Int, windowLeaseID: WindowLeaseID)
     case closeRequested(CatalogID, generation: Int, windowLeaseID: WindowLeaseID)
     case didClose(CatalogID, generation: Int, windowLeaseID: WindowLeaseID)
+    case didChangeOcclusion(CatalogID, generation: Int, windowLeaseID: WindowLeaseID, isOccluded: Bool)
 }
 
 protocol CatalogWindowEventSink: AnyObject {

@@ -9,6 +9,12 @@ final class ApplicationGraph {
 
     let layoutManager = WindowLayoutManager()
     let resetContract: ShellResetContract = DefaultShellResetContract()
+    private(set) lazy var pressureMonitor = PressureMonitor()
+    private(set) lazy var snapshotStore = SnapshotStore()
+    private(set) lazy var resourceManager = ResourceManager(
+        pressureMonitor: pressureMonitor,
+        snapshotStore: snapshotStore
+    )
 
     private(set) lazy var windowPool = WindowPool(
         resetContract: resetContract,
@@ -55,6 +61,8 @@ final class ApplicationGraph {
         windowPool: windowPool,
         webRuntime: webRuntime,
         resetContract: resetContract,
+        resourceManager: resourceManager,
+        snapshotStore: snapshotStore,
         snapshotOverlayEnabled: snapshotOverlayEnabled
     )
 

@@ -11,6 +11,8 @@ final class CatalogWindowManager {
     private let windowPool: WindowPool
     private let webRuntime: WebRuntime
     private let resetContract: ShellResetContract
+    private let resourceManager: ResourceManager
+    private let snapshotStore: SnapshotStore
     private let snapshotOverlayEnabled: Bool
     private let logger = Logger(subsystem: "com.orabrowser.app", category: "CatalogWindowManager")
 
@@ -26,6 +28,8 @@ final class CatalogWindowManager {
         windowPool: WindowPool,
         webRuntime: WebRuntime,
         resetContract: ShellResetContract,
+        resourceManager: ResourceManager,
+        snapshotStore: SnapshotStore,
         snapshotOverlayEnabled: Bool
     ) {
         self.registry = registry
@@ -35,7 +39,19 @@ final class CatalogWindowManager {
         self.windowPool = windowPool
         self.webRuntime = webRuntime
         self.resetContract = resetContract
+        self.resourceManager = resourceManager
+        self.snapshotStore = snapshotStore
         self.snapshotOverlayEnabled = snapshotOverlayEnabled
+
+        resourceManager.setCallbacks(ResourceManagerCallbacks(
+            releasePage: { [weak self] id in self?.releasePage(for: id) },
+            recyclePageAndShell: { [weak self] id in
+                Task { @MainActor in await self?.close(id, reason: .allWindows) }
+            },
+            captureSnapshot: { [weak self] id in await self?.captureSnapshot(for: id) },
+            restoreSnapshot: { [weak self] id in self?.storedSnapshot(for: id) }
+        ))
+        resourceManager.start()
     }
 
     func open(_ request: OpenCatalogRequest) throws -> CatalogID {
@@ -115,6 +131,7 @@ final class CatalogWindowManager {
         guard windowLeases[id]?.id == windowLease.id else { return }
         windowLeases.removeValue(forKey: id)
         shellStates.removeValue(forKey: id)
+        resourceManager.unregister(catalogID: id)
         await windowPool.release(windowLease, reason: windowReleaseReason(for: reason))
     }
 
@@ -165,7 +182,11 @@ final class CatalogWindowManager {
             actions: actions,
             dependencies: dependenciesFactory(context)
         )
-        state.setOverlayState(snapshotOverlayEnabled ? .skeleton : .blank)
+        let snapshotKey = SnapshotKey(catalogID: snapshot.id, generation: snapshot.generation, viewportClass: "default")
+        let storedImage = snapshotOverlayEnabled ? snapshotStore.load(for: snapshotKey) : nil
+        state
+            .setOverlayState(storedImage
+                .map(SnapshotOverlayState.snapshot) ?? (snapshotOverlayEnabled ? .skeleton : .blank))
 
         controller.bind(
             catalogID: snapshot.id,
@@ -188,8 +209,42 @@ final class CatalogWindowManager {
         lease.setState(.visible)
         windowLeases[snapshot.id] = lease
         shellStates[snapshot.id] = state
+        resourceManager.register(catalogID: snapshot.id, generation: snapshot.generation)
         lease.orderFront()
         acquirePage(for: snapshot, windowLease: lease)
+    }
+
+    private func releasePage(for id: CatalogID) {
+        guard let windowLease = windowLeases[id], let pageLease = pageLeases.removeValue(forKey: id) else { return }
+        windowLease.detachPage(expectedPageLeaseID: pageLease.id)
+        webRuntime.releasePage(pageLease, reason: .recycle)
+    }
+
+    private func captureSnapshot(for id: CatalogID) async {
+        guard let pageLease = pageLeases[id] else { return }
+        let key = SnapshotKey(catalogID: id, generation: pageLease.generation, viewportClass: "default")
+        do {
+            let artifact = try await pageLease.captureSnapshot(SnapshotRequest(
+                snapshotConfig: .full,
+                viewportClass: key.viewportClass
+            ))
+            guard pageLeases[id]?.id == artifact.leaseID, let image = artifact.image else { return }
+            snapshotStore.save(image, for: key)
+            shellStates[id]?.setOverlayState(.snapshot(image))
+        } catch {
+            logger.error("Snapshot capture failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    private func storedSnapshot(for id: CatalogID) -> NSImage? {
+        guard let generation = windowLeases[id]?.generation else { return nil }
+        let image = snapshotStore.load(for: SnapshotKey(
+            catalogID: id,
+            generation: generation,
+            viewportClass: "default"
+        ))
+        if snapshotOverlayEnabled, let image { shellStates[id]?.setOverlayState(.snapshot(image)) }
+        return image
     }
 
     private func acquirePage(for snapshot: CatalogSnapshot, windowLease: WindowLease) {
@@ -318,8 +373,12 @@ final class CatalogWindowManager {
 extension CatalogWindowManager: CatalogWindowEventSink {
     func handle(_ event: CatalogWindowEvent) {
         switch event {
-        case .didBecomeKey, .didResignKey:
-            break
+        case let .didBecomeKey(id, generation, leaseID, _):
+            guard windowLeases[id]?.id == leaseID, windowLeases[id]?.generation == generation else { return }
+            resourceManager.handleFocusGained(catalogID: id)
+        case let .didResignKey(id, generation, leaseID):
+            guard windowLeases[id]?.id == leaseID, windowLeases[id]?.generation == generation else { return }
+            resourceManager.handleFocusLost(catalogID: id)
         case let .didMoveOrResize(id, generation, leaseID, frame, screenID):
             guard windowLeases[id]?.id == leaseID, windowLeases[id]?.generation == generation else { return }
             persistPlacement(id: id, generation: generation, frame: frame, screenID: screenID, isFullScreen: false)
@@ -329,6 +388,8 @@ extension CatalogWindowManager: CatalogWindowEventSink {
             persistPlacement(id: id, generation: generation, frame: frame, screenID: nil, isFullScreen: isFullScreen)
         case let .didMiniaturize(id, generation, leaseID):
             guard windowLeases[id]?.id == leaseID else { return }
+            resourceManager.handleFocusLost(catalogID: id)
+            resourceManager.handleOcclusionChange(catalogID: id, isOccluded: true)
             do {
                 try registry.markHidden(id, generation: generation)
             } catch {
@@ -340,6 +401,9 @@ extension CatalogWindowManager: CatalogWindowEventSink {
         case let .didClose(id, generation, leaseID):
             guard windowLeases[id]?.id == leaseID, windowLeases[id]?.generation == generation else { return }
             Task { @MainActor [weak self] in await self?.close(id) }
+        case let .didChangeOcclusion(id, generation, leaseID, isOccluded):
+            guard windowLeases[id]?.id == leaseID, windowLeases[id]?.generation == generation else { return }
+            resourceManager.handleOcclusionChange(catalogID: id, isOccluded: isOccluded)
         }
     }
 

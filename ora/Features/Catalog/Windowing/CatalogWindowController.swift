@@ -21,6 +21,7 @@ final class CatalogWindowController: NSWindowController, NSWindowDelegate {
     private var moveResizeWorkItem: DispatchWorkItem?
     private var isBound = false
     private var shellState: CatalogShellState?
+    private var occlusionObserver: NSObjectProtocol?
 
     // MARK: - Init (creates new ReusableWindowShell)
 
@@ -56,6 +57,21 @@ final class CatalogWindowController: NSWindowController, NSWindowDelegate {
         let window = reusableShell.window
 
         window.delegate = self
+
+        occlusionObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didChangeOcclusionStateNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  let catalogID = self.catalogID,
+                  let windowLeaseID = self.windowLeaseID,
+                  let window = notification.object as? NSWindow else { return }
+            let isOccluded = !window.occlusionState.contains(.visible)
+            self.eventSink?.handle(.didChangeOcclusion(
+                catalogID, generation: self.generation, windowLeaseID: windowLeaseID, isOccluded: isOccluded
+            ))
+        }
 
         // Apply placement
         if let placement {
@@ -102,6 +118,10 @@ final class CatalogWindowController: NSWindowController, NSWindowDelegate {
         isBound = false
         moveResizeWorkItem?.cancel()
         moveResizeWorkItem = nil
+        if let observer = occlusionObserver {
+            NotificationCenter.default.removeObserver(observer)
+            occlusionObserver = nil
+        }
         window?.delegate = nil
         eventSink = nil
         shellState?.setOverlayState(.blank)
