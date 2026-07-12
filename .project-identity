@@ -1,0 +1,109 @@
+{
+  "_comments": {
+    "projectId": "Auto-generated. DO NOT change — used by Symphony for task scoping.",
+    "trello": "Fill in your Trello board/list/card names. Run \"awkit trello info\" to verify."
+  },
+  "projectName": "OraBrowser",
+  "projectId": "orabrowser",
+  "projectType": "macos",
+  "bundleIdentifier": "com.orabrowser.app",
+  "primaryLanguage": "en",
+  "techStack": {
+    "platform": "macOS",
+    "backend": "none"
+  },
+  "services": {
+    "firebase": {
+      "enabled": false,
+      "features": []
+    }
+  },
+  "constitution": {
+    "gate": "G0",
+    "required": true,
+    "path": "AGENTS.md",
+    "status": "active",
+    "fallbackPaths": [
+      "docs/specs/CONSTITUTION.md",
+      ".specify/memory/constitution.md",
+      "AGENTS.md"
+    ],
+    "template": "templates/specs/constitution-template.md",
+    "description": "Project constitution (immutable principles). Gate 0 — every spec/task MUST comply. AI agents: read this file before any MODERATE/COMPLEX work."
+  },
+  "trello": {
+    "board": "Your Board Name",
+    "list": "Your List Name",
+    "card": "Your Card Name"
+  },
+  "automation": {
+    "autoQA": true,
+    "maxSelfCorrectionLoops": 3,
+    "multiAgent": {
+      "enabled": true,
+      "routingMode": "cost-optimized",
+      "audioAlerts": true,
+      "runners": {
+        "claude": "claude",
+        "codex": "codex",
+        "qwen": "qwen",
+        "fable5": "fable5"
+      }
+    },
+    "telegram": {
+      "enabled": true,
+      "chatId": "",
+      "topicId": "",
+      "triggers": {
+        "git_push": true,
+        "task_complete": false,
+        "deploy": true
+      }
+    },
+    "trello": {
+      "enabled": true,
+      "autoSync": true,
+      "triggers": {
+        "task_complete": true,
+        "milestone": true,
+        "blocked": true
+      }
+    },
+    "git": {
+      "autoCommit": true,
+      "autoPush": true
+    },
+    "obsidian": {
+      "enabled": false,
+      "path": "",
+      "autoSync": false
+    },
+    "mcp": {
+      "pixel-mcp": {
+        "enabled": false
+      }
+    },
+    "build": {
+      "enabled": true,
+      "command": "xcodebuild build -scheme ora -destination 'platform=macOS'"
+    }
+  },
+  "modelPolicy": {
+    "mode": "auto",
+    "defaultTier": "STANDARD",
+    "tierOverrides": {
+      "*.plist|*.json|*.env": "LIGHT",
+      "docs/*": "LIGHT"
+    }
+  },
+  "projectStage": "development",
+  "codingStandards": {
+    "language": "en",
+    "namingConvention": "camelCase",
+    "indentation": "spaces-4",
+    "lineLength": 120
+  },
+  "projectGoals": [],
+  "createdDate": "2026-07-12",
+  "lastUpdated": "2026-07-12"
+}

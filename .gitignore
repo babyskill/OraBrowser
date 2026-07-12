@@ -98,3 +98,7 @@ codesign*
 # !build/dsa_pub.pem
 
 Vendor/CEF
+log.txt
+tmp/
+.gitnexus/
+node_modules/
