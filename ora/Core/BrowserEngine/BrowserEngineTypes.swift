@@ -7,12 +7,12 @@ enum BrowserWebsiteDataType: Hashable {
     case all
 }
 
-enum BrowserUserScriptInjectionTime {
+enum BrowserUserScriptInjectionTime: Hashable, Equatable {
     case atDocumentStart
     case atDocumentEnd
 }
 
-struct BrowserUserScript {
+struct BrowserUserScript: Hashable, Equatable {
     let name: String?
     let source: String
     let injectionTime: BrowserUserScriptInjectionTime

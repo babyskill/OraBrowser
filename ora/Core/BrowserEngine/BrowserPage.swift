@@ -14,6 +14,7 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
     private var isReadyForNavigation = false
     private var pendingLoadRequest: URLRequest?
     private var pendingReload = false
+    private var isTeardown = false
 
     init(
         profile: BrowserEngineProfile,
@@ -21,6 +22,10 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
         delegate: BrowserPageDelegate?
     ) {
         let webConfiguration = WKWebViewConfiguration()
+        webConfiguration.processPool = WebProfileRegistry.shared.processPool(
+            for: profile.identifier,
+            isPrivate: profile.isPrivate
+        )
         webConfiguration.applicationNameForUserAgent = configuration.userAgent
         webConfiguration.websiteDataStore = profile.dataStore
         webConfiguration.allowsAirPlayForMediaPlayback = configuration.allowsAirPlayForMediaPlayback
@@ -172,6 +177,8 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
     }
 
     func teardown() {
+        guard !isTeardown else { return }
+        isTeardown = true
         webView.stopLoading()
         webView.navigationDelegate = nil
         webView.uiDelegate = nil
@@ -261,6 +268,10 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
             }
             decisionHandler(.cancel)
         }
+    }
+
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        delegate?.browserPageWebProcessDidTerminate(self)
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {

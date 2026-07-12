@@ -210,11 +210,10 @@ class Tab: ObservableObject, Identifiable {
             passwordCoordinator = PasswordAutofillCoordinator(tab: self)
         }
 
-        let engine = BrowserEngine.shared
-        let profile = engine.makeProfile(identifier: container.id, isPrivate: isPrivate)
+        let profile = WebProfileRegistry.shared.profile(for: container.id, isPrivate: isPrivate)
         let privacySettings = SettingsStore.shared.privacySettings(for: container.id)
         let userScripts = OraBrowserScripts.userScripts() + BrowserPrivacyService.privacyScripts(for: privacySettings)
-        let page = engine.makePage(
+        let page = WebViewFactory.shared.makePage(
             profile: profile,
             configuration: BrowserPageConfiguration.oraDefault(
                 userScripts: userScripts,

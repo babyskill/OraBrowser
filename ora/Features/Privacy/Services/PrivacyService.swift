@@ -12,8 +12,8 @@ enum CookiesPolicy: String, CaseIterable, Identifiable, Codable {
 class PrivacyService {
     @MainActor static func clearAllWebsiteData(for containerId: UUID) async {
         await withCheckedContinuation { continuation in
-            BrowserEngine.shared
-                .makeProfile(identifier: containerId, isPrivate: false)
+            WebProfileRegistry.shared
+                .profile(for: containerId, isPrivate: false)
                 .clearData(ofTypes: [.all]) {
                     continuation.resume()
                 }
@@ -21,7 +21,7 @@ class PrivacyService {
     }
 
     private static func profile(for container: TabContainer) -> BrowserEngineProfile {
-        BrowserEngine.shared.makeProfile(identifier: container.id, isPrivate: false)
+        WebProfileRegistry.shared.profile(for: container.id, isPrivate: false)
     }
 
     private static func clearData(

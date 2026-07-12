@@ -30,6 +30,7 @@ protocol BrowserPageDelegate: AnyObject {
         completion: @escaping (String?) -> Void
     )
     func browserPage(_ page: BrowserPage, didStartDownload download: BrowserDownloadTask)
+    func browserPageWebProcessDidTerminate(_ page: BrowserPage)
 }
 
 extension BrowserPageDelegate {
@@ -81,4 +82,5 @@ extension BrowserPageDelegate {
     }
 
     func browserPage(_ page: BrowserPage, didStartDownload download: BrowserDownloadTask) {}
+    func browserPageWebProcessDidTerminate(_ page: BrowserPage) {}
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-struct BrowserPageConfiguration {
+struct BrowserPageConfiguration: Hashable, Equatable {
     let userAgent: String?
     let allowsPictureInPicture: Bool
     let allowsJavaScript: Bool
@@ -12,6 +12,12 @@ struct BrowserPageConfiguration {
     let scriptMessageNames: [String]
     let userScripts: [BrowserUserScript]
     let privacySettings: SpacePrivacySettings
+
+    var fingerprint: String {
+        var hasher = Hasher()
+        hasher.combine(self)
+        return String(hasher.finalize())
+    }
 
     static func oraDefault(
         userScripts: [BrowserUserScript],
