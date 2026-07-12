@@ -1,87 +1,32 @@
 import AppKit
 import SwiftUI
 
-typealias CatalogRootFactory = (CatalogWindowContext, CatalogShellActions) -> NSViewController
-
 @MainActor
 final class CatalogWindowController: NSWindowController, NSWindowDelegate {
-    let catalogID: CatalogID
-    let generation: Int
-    private(set) weak var eventSink: CatalogWindowEventSink?
+    private(set) var windowLeaseID: WindowLeaseID?
+    private(set) var catalogID: CatalogID?
+    private(set) var generation: Int = 0
 
-    private let layoutManager: WindowLayoutManager
+    private(set) var reusableShell: ReusableWindowShell
+
+    var pageHostView: NSView {
+        reusableShell.pageHostView
+    }
+
+    private weak var eventSink: CatalogWindowEventSink?
+    private var layoutManager: WindowLayoutManager?
+
     private var didRestoreFullScreen = false
     private var lastPersistedFrame: CGRect = .zero
     private var moveResizeWorkItem: DispatchWorkItem?
+    private var isBound = false
+    private var shellState: CatalogShellState?
 
-    init(
-        catalog: CatalogSnapshot,
-        rootFactory: CatalogRootFactory,
-        layoutManager: WindowLayoutManager,
-        eventSink: CatalogWindowEventSink
-    ) {
-        self.catalogID = catalog.id
-        self.generation = catalog.generation
-        self.layoutManager = layoutManager
-        self.eventSink = eventSink
+    // MARK: - Init (creates new ReusableWindowShell)
 
-        let placement = layoutManager.initialPlacement(
-            saved: catalog.placement,
-            screens: layoutManager.currentScreens(),
-            existingFrames: [],
-            preferredScreenID: catalog.placement.screenID
-        )
-
-        let window = NSWindow(
-            contentRect: placement.frame,
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
-            backing: .buffered,
-            defer: false
-        )
-
-        window.titleVisibility = .hidden
-        window.titlebarAppearsTransparent = true
-        window.tabbingMode = .disallowed
-        window.isReleasedWhenClosed = false
-        window.minSize = NSSize(width: 500, height: 360)
-        window.collectionBehavior = [.fullScreenPrimary]
-
-        super.init(window: window)
-
-        window.delegate = self
-
-        let actions = CatalogShellActions(
-            close: { [weak self] in
-                self?.window?.performClose(nil)
-            },
-            reload: { [weak self] in
-                self?.eventSink?.handle(.closeRequested(catalog.id, generation: catalog.generation))
-            },
-            focusLocation: {
-                // Phase 2 stub — will be wired in Phase 3
-            },
-            toggleFullScreen: { [weak self] in
-                self?.window?.toggleFullScreen(nil)
-            }
-        )
-
-        let context = CatalogWindowContext(
-            catalogID: catalog.id,
-            profileID: catalog.profileID,
-            generation: catalog.generation
-        )
-
-        let rootVC = rootFactory(context, actions)
-        window.contentViewController = rootVC
-
-        lastPersistedFrame = placement.frame
-
-        if placement.isFullScreen, !didRestoreFullScreen {
-            didRestoreFullScreen = true
-            DispatchQueue.main.async { [weak self] in
-                self?.window?.toggleFullScreen(nil)
-            }
-        }
+    init(shell: ReusableWindowShell, layoutManager: WindowLayoutManager) {
+        self.reusableShell = shell
+        super.init(window: shell.window)
     }
 
     @available(*, unavailable)
@@ -89,14 +34,105 @@ final class CatalogWindowController: NSWindowController, NSWindowDelegate {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // MARK: - Bind catalog identity
+
+    func bind(
+        catalogID: CatalogID,
+        generation: Int,
+        windowLeaseID: WindowLeaseID,
+        placement: CatalogWindowPlacement?,
+        eventSink: CatalogWindowEventSink,
+        rootFactory: CatalogRootFactory,
+        state: CatalogShellState,
+        layoutManager: WindowLayoutManager
+    ) {
+        self.catalogID = catalogID
+        self.generation = generation
+        self.windowLeaseID = windowLeaseID
+        self.eventSink = eventSink
+        self.layoutManager = layoutManager
+        shellState = state
+
+        let window = reusableShell.window
+
+        window.delegate = self
+
+        // Apply placement
+        if let placement {
+            let screens = layoutManager.currentScreens()
+            let resolved = layoutManager.initialPlacement(
+                saved: placement,
+                screens: screens,
+                existingFrames: [],
+                preferredScreenID: placement.screenID
+            )
+            window.setFrame(resolved.frame, display: false)
+            lastPersistedFrame = resolved.frame
+
+            if placement.isFullScreen, !didRestoreFullScreen {
+                didRestoreFullScreen = true
+                DispatchQueue.main.async { [weak self] in
+                    self?.window?.toggleFullScreen(nil)
+                }
+            }
+        }
+
+        // Create and set the root view controller
+        let rootVC = rootFactory(state)
+        reusableShell.setHostingController(rootVC)
+
+        isBound = true
+    }
+
+    // MARK: - Page host
+
+    func attachPageView(_ view: NSView) {
+        view.frame = pageHostView.bounds
+        view.autoresizingMask = [.width, .height]
+        pageHostView.addSubview(view)
+    }
+
+    func detachPageView() {
+        pageHostView.subviews.forEach { $0.removeFromSuperview() }
+    }
+
+    // MARK: - Unbind & Release
+
+    func prepareForRelease() {
+        isBound = false
+        moveResizeWorkItem?.cancel()
+        moveResizeWorkItem = nil
+        window?.delegate = nil
+        eventSink = nil
+        shellState?.setOverlayState(.blank)
+        shellState = nil
+        catalogID = nil
+        generation = 0
+        windowLeaseID = nil
+    }
+
+    func destroy() {
+        prepareForRelease()
+        reusableShell.destroy()
+    }
+
+    func clearForReuse() {
+        prepareForRelease()
+        didRestoreFullScreen = false
+        lastPersistedFrame = .zero
+        reusableShell.makeNeutralContent()
+    }
+
     // MARK: - NSWindowDelegate
 
     func windowDidBecomeKey(_ notification: Notification) {
-        eventSink?.handle(.didBecomeKey(catalogID, generation: generation, at: Date()))
+        guard let catalogID, let windowLeaseID else { return }
+        eventSink?.handle(.didBecomeKey(catalogID, generation: generation, windowLeaseID: windowLeaseID, at: Date()))
     }
 
     func windowDidResignKey(_ notification: Notification) {
-        eventSink?.handle(.didResignKey(catalogID, generation: generation))
+        guard let catalogID, let windowLeaseID else { return }
+        eventSink?.handle(.didResignKey(catalogID, generation: generation, windowLeaseID: windowLeaseID))
     }
 
     func windowDidResize(_ notification: Notification) {
@@ -112,31 +148,47 @@ final class CatalogWindowController: NSWindowController, NSWindowDelegate {
     }
 
     func windowDidEnterFullScreen(_ notification: Notification) {
-        eventSink?.handle(.didChangeFullScreen(catalogID, generation: generation, isFullScreen: true))
+        guard let catalogID, let windowLeaseID else { return }
+        eventSink?.handle(.didChangeFullScreen(
+            catalogID,
+            generation: generation,
+            windowLeaseID: windowLeaseID,
+            isFullScreen: true
+        ))
     }
 
     func windowDidExitFullScreen(_ notification: Notification) {
-        eventSink?.handle(.didChangeFullScreen(catalogID, generation: generation, isFullScreen: false))
+        guard let catalogID, let windowLeaseID else { return }
+        eventSink?.handle(.didChangeFullScreen(
+            catalogID,
+            generation: generation,
+            windowLeaseID: windowLeaseID,
+            isFullScreen: false
+        ))
         flushLayout()
     }
 
     func windowDidMiniaturize(_ notification: Notification) {
-        eventSink?.handle(.didMiniaturize(catalogID, generation: generation))
+        guard let catalogID, let windowLeaseID else { return }
+        eventSink?.handle(.didMiniaturize(catalogID, generation: generation, windowLeaseID: windowLeaseID))
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
-        eventSink?.handle(.closeRequested(catalogID, generation: generation))
-        return true
+        guard let catalogID, let windowLeaseID else { return true }
+        eventSink?.handle(.closeRequested(catalogID, generation: generation, windowLeaseID: windowLeaseID))
+        return false
     }
 
     func windowWillClose(_ notification: Notification) {
+        guard let catalogID, let windowLeaseID else { return }
         flushLayout()
-        eventSink?.handle(.didClose(catalogID, generation: generation))
+        eventSink?.handle(.didClose(catalogID, generation: generation, windowLeaseID: windowLeaseID))
     }
 
     // MARK: - Layout coalescing
 
     private func coalesceLayoutEvent() {
+        guard isBound else { return }
         moveResizeWorkItem?.cancel()
         let workItem = DispatchWorkItem { [weak self] in
             self?.flushLayout()
@@ -148,13 +200,13 @@ final class CatalogWindowController: NSWindowController, NSWindowDelegate {
     func flushLayout() {
         moveResizeWorkItem?.cancel()
         moveResizeWorkItem = nil
-        guard let window else { return }
+        guard let catalogID, let windowLeaseID, let window else { return }
         let frame = window.frame
         guard frame != lastPersistedFrame else { return }
         lastPersistedFrame = frame
-        let screenID = layoutManager.displayID(for: window)
+        let screenID = layoutManager?.displayID(for: window)
         eventSink?.handle(.didMoveOrResize(
-            catalogID, generation: generation, frame: frame, screenID: screenID
+            catalogID, generation: generation, windowLeaseID: windowLeaseID, frame: frame, screenID: screenID
         ))
     }
 }

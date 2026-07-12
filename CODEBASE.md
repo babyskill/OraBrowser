@@ -76,6 +76,7 @@ scripts/                         # Build, release and publishing automation
 | `docs/Document.md` | Initial native catalog runtime architecture specification |
 | `docs/OraBrowser-Catalog-Runtime-Plan.md` | Detailed catalog runtime analysis and implementation plan |
 | `docs/OraBrowser-Phase2-Implementation-Plan.md` | Phase 2 catalog model, AppKit window shell and WindowGroup migration plan |
+| `docs/OraBrowser-Phase3-Implementation-Plan.md` | Phase 3 WindowPool, shell reset, instant snapshot surface and independent window/page lease plan |
 
 ---
 
@@ -91,6 +92,7 @@ scripts/                         # Build, release and publishing automation
 - 2026-07-12: Replaced generated placeholders with the current Swift/AppKit/WebKit structure.
 - 2026-07-12: Added the native catalog runtime architecture and implementation plan to the documentation index.
 - 2026-07-12: Added the detailed Phase 2 catalog model and AppKit-managed window implementation plan.
+- 2026-07-12: Added the detailed Phase 3 WindowPool, ShellResetContract, SnapshotOverlay and lease-separation implementation plan.
 
 ---
 

@@ -8,6 +8,16 @@ final class ApplicationGraph {
     static let shared = ApplicationGraph()
 
     let layoutManager = WindowLayoutManager()
+    let resetContract: ShellResetContract = DefaultShellResetContract()
+
+    private(set) lazy var windowPool = WindowPool(
+        resetContract: resetContract,
+        enabled: windowPoolEnabled
+    )
+
+    private(set) lazy var webRuntime = WebRuntime(
+        warmPageEnabled: warmPageLeaseEnabled
+    )
 
     private(set) lazy var normalModelContainer: ModelContainer = {
         do {
@@ -34,10 +44,18 @@ final class ApplicationGraph {
     private(set) lazy var windowManager: CatalogWindowManager = .init(
         registry: registry,
         layoutManager: layoutManager,
-        rootFactory: { [weak self] context, actions in
-            self?.makeRootViewController(context: context, actions: actions)
+        rootFactory: { [weak self] state in
+            self?.makeRootViewController(state: state)
                 ?? NSViewController()
-        }
+        },
+        dependenciesFactory: { [weak self] context in
+            guard let self else { preconditionFailure("ApplicationGraph was released") }
+            return self.dependencies(for: context)
+        },
+        windowPool: windowPool,
+        webRuntime: webRuntime,
+        resetContract: resetContract,
+        snapshotOverlayEnabled: snapshotOverlayEnabled
     )
 
     private(set) lazy var commandRouter = CatalogCommandRouter(windowManager: windowManager)
@@ -50,6 +68,18 @@ final class ApplicationGraph {
 
     var catalogRuntimeEnabled: Bool {
         UserDefaults.standard.bool(forKey: "catalogRuntime")
+    }
+
+    var windowPoolEnabled: Bool {
+        featureFlag(named: "windowPool", defaultValue: true)
+    }
+
+    var snapshotOverlayEnabled: Bool {
+        featureFlag(named: "snapshotOverlay", defaultValue: true)
+    }
+
+    var warmPageLeaseEnabled: Bool {
+        featureFlag(named: "warmPageLease", defaultValue: true)
     }
 
     func dependencies(for context: CatalogWindowContext) -> CatalogRootDependencies {
@@ -87,11 +117,13 @@ final class ApplicationGraph {
 
     // MARK: - Root view controller factory
 
-    private func makeRootViewController(
-        context: CatalogWindowContext,
-        actions: CatalogShellActions
-    ) -> NSViewController {
-        let shellView = CatalogShellView(context: context, actions: actions)
+    private func makeRootViewController(state: CatalogShellState) -> NSViewController {
+        let shellView = CatalogShellView(state: state)
         return NSHostingController(rootView: shellView)
+    }
+
+    private func featureFlag(named key: String, defaultValue: Bool) -> Bool {
+        guard UserDefaults.standard.object(forKey: key) != nil else { return defaultValue }
+        return UserDefaults.standard.bool(forKey: key)
     }
 }

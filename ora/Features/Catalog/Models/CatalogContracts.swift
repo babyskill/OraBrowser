@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 // MARK: - Typed Identifiers
 
@@ -117,6 +118,70 @@ struct OpenCatalogRequest: Sendable {
     let preferredPlacement: CatalogWindowPlacement?
 }
 
+// MARK: - Windowing Request Models
+
+struct WindowAcquireRequest: Sendable {
+    let catalogID: CatalogID
+    let generation: Int
+    let shellCompatibility: ShellCompatibility
+    let placement: CatalogWindowPlacement?
+}
+
+struct CatalogShellBinding: Sendable {
+    let catalogID: CatalogID
+    let generation: Int
+    let profileID: ProfileID
+    let title: String?
+    let startURL: URL
+    let isPrivate: Bool
+    let configurationFingerprint: String
+    let windowPlacement: CatalogWindowPlacement?
+}
+
+struct CatalogWindowContext: Sendable {
+    let catalogID: CatalogID
+    let profileID: ProfileID
+    let generation: Int
+}
+
+// MARK: - Overlay and root view models
+
+struct CatalogShellActions {
+    let close: () -> Void
+    let reload: () -> Void
+    let focusLocation: () -> Void
+    let toggleFullScreen: () -> Void
+}
+
+@MainActor
+final class CatalogShellState: ObservableObject {
+    let binding: CatalogShellBinding
+    let context: CatalogWindowContext
+    let actions: CatalogShellActions
+    let dependencies: CatalogRootDependencies
+
+    @Published private(set) var overlayState: SnapshotOverlayState = .blank
+
+    init(
+        binding: CatalogShellBinding,
+        context: CatalogWindowContext,
+        actions: CatalogShellActions,
+        dependencies: CatalogRootDependencies
+    ) {
+        self.binding = binding
+        self.context = context
+        self.actions = actions
+        self.dependencies = dependencies
+    }
+
+    func setOverlayState(_ newState: SnapshotOverlayState) {
+        overlayState = newState
+    }
+}
+
+typealias CatalogRootFactory = (_ state: CatalogShellState) -> NSViewController
+typealias CatalogDependenciesFactory = (_ context: CatalogWindowContext) -> CatalogRootDependencies
+
 // MARK: - Updates
 
 struct CatalogNavigationUpdate: Sendable {
@@ -135,25 +200,34 @@ struct CatalogLayoutUpdate: Sendable {
 // MARK: - Window Events
 
 enum CatalogWindowEvent {
-    case didBecomeKey(CatalogID, generation: Int, at: Date)
-    case didResignKey(CatalogID, generation: Int)
-    case didMoveOrResize(CatalogID, generation: Int, frame: CGRect, screenID: String?)
-    case didChangeFullScreen(CatalogID, generation: Int, isFullScreen: Bool)
-    case didMiniaturize(CatalogID, generation: Int)
-    case closeRequested(CatalogID, generation: Int)
-    case didClose(CatalogID, generation: Int)
+    case didBecomeKey(CatalogID, generation: Int, windowLeaseID: WindowLeaseID, at: Date)
+    case didResignKey(CatalogID, generation: Int, windowLeaseID: WindowLeaseID)
+    case didMoveOrResize(CatalogID, generation: Int, windowLeaseID: WindowLeaseID, frame: CGRect, screenID: String?)
+    case didChangeFullScreen(CatalogID, generation: Int, windowLeaseID: WindowLeaseID, isFullScreen: Bool)
+    case didMiniaturize(CatalogID, generation: Int, windowLeaseID: WindowLeaseID)
+    case closeRequested(CatalogID, generation: Int, windowLeaseID: WindowLeaseID)
+    case didClose(CatalogID, generation: Int, windowLeaseID: WindowLeaseID)
 }
 
 protocol CatalogWindowEventSink: AnyObject {
     func handle(_ event: CatalogWindowEvent)
 }
 
-// MARK: - Window Context (for SwiftUI)
+// MARK: - Lease-aware Event Context
 
-struct CatalogWindowContext: Sendable {
+struct LeaseEventContext: Sendable {
+    let windowLeaseID: WindowLeaseID
+    let pageLeaseID: PageLeaseID?
     let catalogID: CatalogID
-    let profileID: ProfileID
     let generation: Int
+}
+
+// MARK: - Close Reason
+
+enum CloseReason: Sendable {
+    case userInitiated
+    case terminate
+    case allWindows
 }
 
 // MARK: - Errors
@@ -173,12 +247,4 @@ enum CatalogWindowError: Error {
     case catalogNotFound(CatalogID)
     case invalidConfiguration
     case controllerDeallocated
-}
-
-// MARK: - Close Reason
-
-enum CloseReason: Sendable {
-    case userInitiated
-    case terminate
-    case allWindows
 }
