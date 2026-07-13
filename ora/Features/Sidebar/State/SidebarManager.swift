@@ -7,12 +7,16 @@ enum SidebarPosition: String, Hashable {
 
 @MainActor
 class SidebarManager: ObservableObject {
-    @AppStorage("ui.sidebar.hidden") var isSidebarHidden: Bool = false
+    @AppStorage("ui.sidebar.hidden") var isSidebarHidden: Bool = true
     @AppStorage("ui.sidebar.position") var sidebarPosition: SidebarPosition = .primary
 
     @Published var primaryFraction = FractionHolder.usingUserDefaults(0.2, key: "ui.sidebar.fraction.primary")
     @Published var secondaryFraction = FractionHolder.usingUserDefaults(0.2, key: "ui.sidebar.fraction.secondary")
-    @Published var hiddenSidebar = SideHolder.usingUserDefaults(key: "ui.sidebar.visibility")
+    @Published var hiddenSidebar = SideHolder.usingUserDefaults(.primary, key: "ui.sidebar.visibility")
+
+    init() {
+        updateSidebarHidden()
+    }
 
     var currentFraction: FractionHolder {
         sidebarPosition == .primary ? primaryFraction : secondaryFraction

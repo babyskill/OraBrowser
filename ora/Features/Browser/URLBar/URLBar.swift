@@ -297,40 +297,31 @@ struct URLBar: View {
             }
             .frame(width: 16, height: 16)
 
-            ZStack(alignment: .leading) {
+            Spacer()
+
+            ZStack {
                 CopiedURLOverlay(
                     foregroundColor: buttonForegroundColor,
                     showCopiedAnimation: $showCopiedAnimation,
                     startWheelAnimation: $startWheelAnimation
                 )
 
-                // URL display
-                let parts = URLDisplayUtils.displayParts(
-                    url: tab.url,
-                    title: tab.title,
-                    showFull: toolbarManager.showFullURL
-                )
-                HStack(spacing: 0) {
-                    Text(parts.host)
-                        .font(.system(size: 14))
-                        .foregroundColor(buttonForegroundColor)
-                    if let title = parts.title {
-                        Text(" / \(title)")
-                            .font(.system(size: 14))
-                            .foregroundColor(buttonForegroundColor.opacity(0.6))
-                    }
-                    Spacer()
-                }
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .opacity(showCopiedAnimation ? 0 : 1)
-                .offset(y: showCopiedAnimation ? (startWheelAnimation ? -12 : 12) : 0)
-                .animation(.easeOut(duration: 0.3), value: showCopiedAnimation)
-                .animation(.easeOut(duration: 0.3), value: startWheelAnimation)
+                // Title display
+                let displayText = tab.title.isEmpty ? (tab.url.host ?? tab.url.absoluteString) : tab.title
+                Text(displayText)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(buttonForegroundColor)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .opacity(showCopiedAnimation ? 0 : 1)
+                    .offset(y: showCopiedAnimation ? (startWheelAnimation ? -12 : 12) : 0)
+                    .animation(.easeOut(duration: 0.3), value: showCopiedAnimation)
+                    .animation(.easeOut(duration: 0.3), value: startWheelAnimation)
             }
-            .font(.system(size: 14))
+            .font(.system(size: 13))
             .foregroundColor(buttonForegroundColor)
-            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer()
 
             Button {
                 if let activeTab = tabManager.activeTab {

@@ -14,9 +14,26 @@ struct BrowserPageConfiguration: Hashable, Equatable {
     let privacySettings: SpacePrivacySettings
 
     var fingerprint: String {
-        var hasher = Hasher()
-        hasher.combine(self)
-        return String(hasher.finalize())
+        let parts = [
+            userAgent ?? "",
+            String(allowsPictureInPicture),
+            String(allowsJavaScript),
+            String(allowsJavaScriptWindowsAutomatically),
+            String(allowsAirPlayForMediaPlayback),
+            String(allowsInspectableDebugging),
+            String(allowsBackForwardNavigationGestures),
+            String(mediaPlaybackRequiresUserAction),
+            scriptMessageNames.joined(separator: ","),
+            String(privacySettings.blockThirdPartyTrackers),
+            String(privacySettings.blockFingerprinting),
+            String(privacySettings.cookiesPolicy.rawValue)
+        ]
+        let joined = parts.joined(separator: "|")
+        var hash = 5381
+        for char in joined.unicodeScalars {
+            hash = ((hash << 5) &+ hash) &+ Int(char.value)
+        }
+        return String(hash)
     }
 
     static func oraDefault(
