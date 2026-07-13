@@ -60,8 +60,10 @@ struct QuickTabSwitcherPopup: View {
     }
 
     @ViewBuilder
-    private func tabButton(for tab: Tab) -> some View {
+    private func tabButton(for tab: Tab, isActiveTab: Bool) -> some View {
         let isSelected = tabManager.isActive(tab)
+        let showItem = isHovering || isActiveTab
+
         Button {
             tabManager.activeTab = tab
             if !tab.isWebViewReady {
@@ -89,7 +91,12 @@ struct QuickTabSwitcherPopup: View {
             )
         }
         .buttonStyle(.plain)
-        .frame(width: 32, height: 32)
+        .frame(
+            width: style == .horizontal ? (showItem ? 32 : 0) : 32,
+            height: style == .vertical ? (showItem ? 32 : 0) : 32
+        )
+        .opacity(showItem ? 1.0 : 0.0)
+        .clipped()
     }
 
     @ViewBuilder
@@ -97,65 +104,50 @@ struct QuickTabSwitcherPopup: View {
         let itemWidth: CGFloat = 32
         let spacing: CGFloat = 8
         let maxVisibleItems = 5
+        let currentSpacing = isHovering ? spacing : 0
         let limitWidth = CGFloat(maxVisibleItems) * itemWidth + CGFloat(maxVisibleItems - 1) * spacing
+
+        let activeTab = sortedTabs.first(where: { tabManager.isActive($0) }) ?? sortedTabs.first
 
         Group {
             if style == .horizontal {
                 Group {
-                    if !isHovering {
-                        if let activeTab = sortedTabs.first(where: { tabManager.isActive($0) }) ?? sortedTabs.first {
-                            tabButton(for: activeTab)
-                                .transition(.scale.combined(with: .opacity))
+                    if sortedTabs.count <= maxVisibleItems {
+                        HStack(spacing: currentSpacing) {
+                            ForEach(sortedTabs) { tab in
+                                tabButton(for: tab, isActiveTab: tab == activeTab)
+                            }
                         }
                     } else {
-                        if sortedTabs.count <= maxVisibleItems {
-                            HStack(spacing: spacing) {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: currentSpacing) {
                                 ForEach(sortedTabs) { tab in
-                                    tabButton(for: tab)
+                                    tabButton(for: tab, isActiveTab: tab == activeTab)
                                 }
                             }
-                            .transition(.opacity)
-                        } else {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: spacing) {
-                                    ForEach(sortedTabs) { tab in
-                                        tabButton(for: tab)
-                                    }
-                                }
-                            }
-                            .frame(width: limitWidth)
-                            .transition(.opacity)
                         }
+                        .frame(width: isHovering ? limitWidth : itemWidth)
                     }
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)
             } else {
                 Group {
-                    if !isHovering {
-                        if let activeTab = sortedTabs.first(where: { tabManager.isActive($0) }) ?? sortedTabs.first {
-                            tabButton(for: activeTab)
-                                .transition(.scale.combined(with: .opacity))
+                    if sortedTabs.count <= maxVisibleItems {
+                        VStack(spacing: currentSpacing) {
+                            ForEach(sortedTabs) { tab in
+                                tabButton(for: tab, isActiveTab: tab == activeTab)
+                            }
                         }
                     } else {
-                        if sortedTabs.count <= maxVisibleItems {
-                            VStack(spacing: spacing) {
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(spacing: currentSpacing) {
                                 ForEach(sortedTabs) { tab in
-                                    tabButton(for: tab)
+                                    tabButton(for: tab, isActiveTab: tab == activeTab)
                                 }
                             }
-                            .transition(.opacity)
-                        } else {
-                            ScrollView(.vertical, showsIndicators: false) {
-                                VStack(spacing: spacing) {
-                                    ForEach(sortedTabs) { tab in
-                                        tabButton(for: tab)
-                                    }
-                                }
-                            }
-                            .frame(height: limitWidth)
-                            .transition(.opacity)
                         }
+                        .frame(height: isHovering ? limitWidth : itemWidth)
                     }
                 }
                 .padding(.horizontal, 6)
