@@ -61,7 +61,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>CapyBrowser</string>
+			<string>Capy Browser</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>http</string>
