@@ -27,7 +27,7 @@ struct QuickTabSwitcherPopup: View {
                             .onChanged { value in
                                 isDragging = true
                                 dragOffset = value.translation.width
-                                NSCursor.grabbing.set()
+                                NSCursor.closedHand.set()
                             }
                             .onEnded { value in
                                 isDragging = false
