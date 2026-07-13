@@ -8,7 +8,8 @@ extension ModelConfiguration {
             return ModelConfiguration(
                 "OraDataPrivate",
                 schema: Schema([TabContainer.self, History.self, Download.self, CatalogRecord.self]),
-                isStoredInMemoryOnly: true
+                url: URL.applicationSupportDirectory.appending(path: "Ora/OraDataPrivate.sqlite"),
+                cloudKitDatabase: .none
             )
         } else {
             let hasICloudContainer = FileManager.default.url(forUbiquityContainerIdentifier: nil) != nil

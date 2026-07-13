@@ -51,6 +51,7 @@ final class ApplicationGraph {
 
     private(set) lazy var privateModelContainer: ModelContainer = {
         do {
+            deleteSwiftDataStore("Ora/OraDataPrivate.sqlite")
             return try ModelConfiguration.createOraContainer(isPrivate: true)
         } catch {
             fatalError("Failed to create private ModelContainer: \(error)")
