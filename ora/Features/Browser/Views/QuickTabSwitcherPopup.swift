@@ -67,7 +67,6 @@ struct QuickTabSwitcherPopup: View {
                 )
             }
             .buttonStyle(.plain)
-            .help(tab.title)
         }
     }
 }
