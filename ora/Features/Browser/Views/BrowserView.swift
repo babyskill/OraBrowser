@@ -89,6 +89,13 @@ struct BrowserView: View {
                 )
             }
 
+            if sidebarManager.isSidebarHidden, toolbarManager.showQuickTabSwitcher {
+                QuickTabSwitcherPopup()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .padding(.leading, 16)
+                    .padding(.bottom, 16)
+            }
+
             if toolbarManager.isToolbarHidden, sidebarManager.sidebarPosition != .primary {
                 FloatingURLBar(
                     showFloatingURLBar: $showFloatingURLBar,
