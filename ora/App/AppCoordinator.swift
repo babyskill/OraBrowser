@@ -80,6 +80,9 @@ final class AppCoordinator {
         Task {
             try? registry.flush()
             await windowManager.closeAll(reason: .terminate)
+            await MainActor.run {
+                NSApp.reply(toApplicationShouldTerminate: true)
+            }
         }
     }
 
