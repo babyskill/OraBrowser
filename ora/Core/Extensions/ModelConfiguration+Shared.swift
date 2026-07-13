@@ -3,7 +3,7 @@ import SwiftData
 
 extension ModelConfiguration {
     /// Shared model configuration for the main Ora database
-    static func oraDatabase(isPrivate: Bool = false) -> ModelConfiguration {
+    static func oraDatabase(isPrivate: Bool = false, disableCloudKit: Bool = false) -> ModelConfiguration {
         if isPrivate {
             return ModelConfiguration(
                 "OraDataPrivate",
@@ -13,12 +13,11 @@ extension ModelConfiguration {
             )
         } else {
             let hasICloudContainer = FileManager.default.url(forUbiquityContainerIdentifier: nil) != nil
-            let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = UserDefaults
-                .standard
-                .bool(forKey: "settings.icloudSyncEnabled")
-                && hasICloudContainer
-                ? .private("iCloud.com.orabrowser.app")
-                : .none
+            let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = disableCloudKit
+                ? .none
+                : (UserDefaults.standard.bool(forKey: "settings.icloudSyncEnabled") && hasICloudContainer
+                    ? .private("iCloud.com.orabrowser.app")
+                    : .none)
             return ModelConfiguration(
                 "OraData",
                 schema: Schema([TabContainer.self, History.self, Download.self, CatalogRecord.self]),
@@ -29,10 +28,10 @@ extension ModelConfiguration {
     }
 
     /// Creates a ModelContainer using the standard Ora database configuration
-    static func createOraContainer(isPrivate: Bool = false) throws -> ModelContainer {
+    static func createOraContainer(isPrivate: Bool = false, disableCloudKit: Bool = false) throws -> ModelContainer {
         return try ModelContainer(
             for: TabContainer.self, History.self, Download.self, CatalogRecord.self,
-            configurations: oraDatabase(isPrivate: isPrivate)
+            configurations: oraDatabase(isPrivate: isPrivate, disableCloudKit: disableCloudKit)
         )
     }
 }

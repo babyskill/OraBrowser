@@ -1,11 +1,14 @@
 import AppKit
 import Foundation
+import os.log
 import SwiftData
 import SwiftUI
 
 @MainActor
 final class ApplicationGraph {
     static let shared = ApplicationGraph()
+
+    private let logger = Logger(subsystem: "com.orabrowser.app", category: "ApplicationGraph")
 
     let layoutManager = WindowLayoutManager()
     let resetContract: ShellResetContract = DefaultShellResetContract()
@@ -44,8 +47,28 @@ final class ApplicationGraph {
         do {
             return try ModelConfiguration.createOraContainer(isPrivate: false)
         } catch {
-            deleteSwiftDataStore("Ora/OraData.sqlite")
-            fatalError("Failed to create normal ModelContainer: \(error)")
+            logger
+                .error(
+                    "Failed to create normal ModelContainer, retrying without CloudKit: \(error.localizedDescription)"
+                )
+            do {
+                return try ModelConfiguration.createOraContainer(isPrivate: false, disableCloudKit: true)
+            } catch {
+                logger
+                    .error(
+                        "Failed to create normal ModelContainer with CloudKit disabled, deleting store and retrying: \(error.localizedDescription)"
+                    )
+                deleteSwiftDataStore("Ora/OraData.sqlite")
+                do {
+                    return try ModelConfiguration.createOraContainer(isPrivate: false, disableCloudKit: true)
+                } catch {
+                    logger
+                        .error(
+                            "Failed to create normal ModelContainer after deleting store: \(error.localizedDescription)"
+                        )
+                    fatalError("Failed to create normal ModelContainer: \(error)")
+                }
+            }
         }
     }()
 
