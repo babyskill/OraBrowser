@@ -42,6 +42,20 @@ enum QuickTabSwitcherStyle: String, CaseIterable, Identifiable {
     }
 }
 
+enum QuickTabSwitcherPosition: String, CaseIterable, Identifiable {
+    case bottomLeft
+    case bottomRight
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .bottomLeft: return String(localized: "Bottom Left")
+        case .bottomRight: return String(localized: "Bottom Right")
+        }
+    }
+}
+
 class ToolbarManager: ObservableObject {
     @AppStorage("ui.toolbar.hidden") var isToolbarHidden: Bool = false
     @AppStorage("ui.toolbar.showfullurl") var showFullURL: Bool = true
@@ -49,4 +63,6 @@ class ToolbarManager: ObservableObject {
     @AppStorage("ui.toolbar.showQuickTabSwitcher") var showQuickTabSwitcher: Bool = true
     @AppStorage("ui.userAgentMode") var userAgentMode: UserAgentMode = .tablet
     @AppStorage("ui.toolbar.quickTabSwitcherStyle") var quickTabSwitcherStyle: QuickTabSwitcherStyle = .horizontal
+    @AppStorage("ui.toolbar.quickTabSwitcherPosition") var quickTabSwitcherPosition: QuickTabSwitcherPosition =
+        .bottomLeft
 }

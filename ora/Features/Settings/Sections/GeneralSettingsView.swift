@@ -9,6 +9,8 @@ struct GeneralSettingsView: View {
     @AppStorage("ui.userAgentMode") private var userAgentMode: UserAgentMode = .tablet
     @AppStorage("ui.toolbar.quickTabSwitcherStyle") private var quickTabSwitcherStyle: QuickTabSwitcherStyle =
         .horizontal
+    @AppStorage("ui.toolbar.quickTabSwitcherPosition") private var quickTabSwitcherPosition: QuickTabSwitcherPosition =
+        .bottomLeft
     @StateObject private var settings = SettingsStore.shared
     @StateObject private var defaultBrowserManager = DefaultBrowserManager.shared
 
@@ -44,7 +46,7 @@ struct GeneralSettingsView: View {
             SettingsCard(header: "Appearance & Interface") {
                 VStack(alignment: .leading, spacing: 8) {
                     Toggle("Show navigation buttons (Back, Forward, Refresh) in Toolbar", isOn: $showNavigationButtons)
-                    Toggle("Show Quick Tab Switcher at bottom-left when Sidebar is hidden", isOn: $showQuickTabSwitcher)
+                    Toggle("Show Quick Tab Switcher when Sidebar is hidden", isOn: $showQuickTabSwitcher)
 
                     Divider()
                         .padding(.vertical, 4)
@@ -66,6 +68,17 @@ struct GeneralSettingsView: View {
                         Picker("", selection: $quickTabSwitcherStyle) {
                             ForEach(QuickTabSwitcherStyle.allCases) { style in
                                 Text(style.displayName).tag(style)
+                            }
+                        }
+                        .frame(width: 120)
+                    }
+
+                    HStack {
+                        Text("Quick Tab Switcher Position:")
+                        Spacer()
+                        Picker("", selection: $quickTabSwitcherPosition) {
+                            ForEach(QuickTabSwitcherPosition.allCases) { pos in
+                                Text(pos.displayName).tag(pos)
                             }
                         }
                         .frame(width: 120)

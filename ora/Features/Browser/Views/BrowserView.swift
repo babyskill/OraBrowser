@@ -91,8 +91,7 @@ struct BrowserView: View {
 
             if sidebarManager.isSidebarHidden, toolbarManager.showQuickTabSwitcher {
                 QuickTabSwitcherPopup()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                    .padding(.leading, 16)
+                    .padding(.horizontal, 16)
                     .padding(.bottom, 16)
             }
 
