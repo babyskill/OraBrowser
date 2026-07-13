@@ -52,20 +52,20 @@ else
         CODE_SIGNING_REQUIRED=NO
 fi
 
-APP_PATH="build/DerivedData/Build/Products/Release/ora.app"
+APP_PATH="build/DerivedData/Build/Products/Release/CapyBrowser.app"
 [[ -d "$APP_PATH" ]] || { echo "error: App build failed, app bundle not found."; exit 1; }
 
 echo "Copying app to build root..."
-cp -R "$APP_PATH" "build/Ora-Browser.app"
+cp -R "$APP_PATH" "build/CapyBrowser.app"
 
 echo "Packaging app into DMG..."
 create-dmg \
     --app-drop-link 600 185 \
     --window-size 800 400 \
-    --volname "CapyApp Browser" \
+    --volname "CapyBrowser" \
     --skip-jenkins \
     "build/CapyApp.dmg" \
-    "build/Ora-Browser.app" 2>/dev/null || true
+    "build/CapyBrowser.app" 2>/dev/null || true
 
 # create-dmg sometimes uses a temp name or fails on return status but works
 TEMP_DMG=$(ls build/rw.*.dmg 2>/dev/null | head -1 || true)
@@ -74,7 +74,7 @@ TEMP_DMG=$(ls build/rw.*.dmg 2>/dev/null | head -1 || true)
 if [[ -f "build/CapyApp.dmg" ]]; then
     echo "========================================"
     echo "Local build complete!"
-    echo "App bundle: build/Ora-Browser.app"
+    echo "App bundle: build/CapyBrowser.app"
     echo "DMG package: build/CapyApp.dmg ($(du -h "build/CapyApp.dmg" | cut -f1))"
     echo "========================================"
 else

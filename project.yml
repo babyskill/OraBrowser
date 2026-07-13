@@ -66,7 +66,7 @@ targets:
         SUEnableAutomaticChecks: YES
         SUEnableInstallerLauncherService: YES
         CFBundleURLTypes:
-          - CFBundleURLName: Ora Browser
+          - CFBundleURLName: Capy Browser
             CFBundleTypeRole: Editor
             LSHandlerRank: Owner
             CFBundleURLSchemes:
@@ -119,7 +119,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         MARKETING_VERSION: 0.2.14
         CURRENT_PROJECT_VERSION: 105
-        PRODUCT_NAME: Ora
+        PRODUCT_NAME: Capy Browser
         PRODUCT_BUNDLE_IDENTIFIER: com.orabrowser.app
         GENERATE_INFOPLIST_FILE: YES
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -157,7 +157,7 @@ targets:
       - target: ora
     settings:
       base:
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Ora.app/Contents/MacOS/Ora"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/CapyBrowser.app/Contents/MacOS/CapyBrowser"
         BUNDLE_LOADER: "$(TEST_HOST)"
 
 schemes:

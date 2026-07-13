@@ -225,13 +225,13 @@ struct OraCommands: Commands {
 
     private func showAboutWindow() {
         let alert = NSAlert()
-        alert.messageText = "Ora Browser"
+        alert.messageText = "Capy Browser"
         alert.informativeText = """
         Version \(getAppVersion())
 
         Fast, secure, and beautiful browser built for macOS.
 
-        © 2025 Ora Browser
+        © 2025 Capy Browser
         """
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")

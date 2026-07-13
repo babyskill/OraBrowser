@@ -18,7 +18,7 @@ struct GeneralSettingsView: View {
         SettingsSection {
             SettingsCard {
                 HStack {
-                    Text("Ora Browser")
+                    Text("CapyBrowser")
                         .font(.headline)
                     Spacer()
                     Text(getAppVersion())
