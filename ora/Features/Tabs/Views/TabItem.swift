@@ -236,7 +236,7 @@ struct TabItem: View {
 
             Menu("Move to Container") {
                 ForEach(availableContainers) { container in
-                    if tab.container.id != container.id {
+                    if tab.container?.id != container.id {
                         Button(action: { onMoveToContainer(container) }) {
                             Text(container.emoji.isEmpty ? container.name : "\(container.emoji) \(container.name)")
                         }

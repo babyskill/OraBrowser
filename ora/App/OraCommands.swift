@@ -42,6 +42,10 @@ struct OraCommands: Commands {
 
             ImportDataButton()
 
+            Button("Create WebApp...") {
+                openWindow(id: "creator")
+            }
+
             Divider()
 
             Button("Close Tab") {

@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class CatalogRecord {
-    @Attribute(.unique) var id: UUID
+    var id: UUID
     var workspaceID: UUID?
 
     var startURL: URL

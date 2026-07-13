@@ -34,5 +34,5 @@ func tabType(for section: TabSection) -> TabType {
 /// Moves a tab between different sections
 func moveTabBetweenSections(from: Tab, to: Tab) {
     from.switchSections(from: from, to: to)
-    from.container.reorderTabs(from: from, to: to)
+    from.container?.reorderTabs(from: from, to: to)
 }

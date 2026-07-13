@@ -328,10 +328,11 @@ struct OraRoot: View {
                             if let activeTab = tabManager.activeTab {
                                 let host = activeTab.url.host ?? ""
                                 let domain = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+                                guard let container = activeTab.container ?? tabManager.activeContainer else { return }
                                 PrivacyService
                                     .clearCacheForHost(
                                         for: domain,
-                                        container: activeTab.container
+                                        container: container
                                     ) { [weak toastManager] in
                                         DispatchQueue.main.async {
                                             activeTab.reload()
@@ -351,10 +352,11 @@ struct OraRoot: View {
                             if let activeTab = tabManager.activeTab {
                                 let host = activeTab.url.host ?? ""
                                 let domain = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+                                guard let container = activeTab.container ?? tabManager.activeContainer else { return }
                                 PrivacyService
                                     .clearCookiesForHost(
                                         for: host,
-                                        container: activeTab.container
+                                        container: container
                                     ) { [weak toastManager] in
                                         DispatchQueue.main.async {
                                             activeTab.reload()

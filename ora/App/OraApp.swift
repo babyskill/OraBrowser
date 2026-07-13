@@ -16,6 +16,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if ApplicationGraph.shared.catalogRuntimeEnabled {
             ApplicationGraph.shared.coordinator.start()
         }
+        if SettingsStore.shared.iCloudSyncEnabled {
+            ICloudSettingsSyncService.shared.start()
+        }
+        Task {
+            await WebAppSyncService.shared.syncWebApps()
+        }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -143,6 +149,13 @@ struct OraApp: App {
         .windowToolbarStyle(UnifiedCompactWindowToolbarStyle())
         .windowResizability(.contentSize)
         .defaultSize(width: 980, height: 640)
+
+        WindowGroup("WebApp Creator", id: "creator") {
+            WebAppCreatorView()
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .defaultSize(width: 550, height: 500)
         .commands { OraCommands(catalogRuntimeEnabled: catalogRuntimeEnabled) }
     }
 }

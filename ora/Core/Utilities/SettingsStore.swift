@@ -162,6 +162,7 @@ class SettingsStore: ObservableObject {
     private let passwordAutofillSubmitEnabledKey = "settings.passwords.autofillSubmitEnabled"
     private let passwordSavePromptsEnabledKey = "settings.passwords.savePromptsEnabled"
     private let suppressedPasswordSavePromptHostsKey = "settings.passwords.suppressedSavePromptHosts"
+    private let iCloudSyncEnabledKey = "settings.icloudSyncEnabled"
 
     // MARK: - Per-Container
 
@@ -237,6 +238,19 @@ class SettingsStore: ObservableObject {
         didSet { defaults.set(autoPiPEnabled, forKey: autoPiPEnabledKey) }
     }
 
+    @Published var iCloudSyncEnabled: Bool {
+        didSet {
+            defaults.set(iCloudSyncEnabled, forKey: iCloudSyncEnabledKey)
+            guard !isInitializingSettingsStore else { return }
+
+            if iCloudSyncEnabled {
+                ICloudSettingsSyncService.shared.start()
+            } else {
+                ICloudSettingsSyncService.shared.stop()
+            }
+        }
+    }
+
     @Published var passwordsEnabled: Bool {
         didSet { defaults.set(passwordsEnabled, forKey: passwordsEnabledKey) }
     }
@@ -264,7 +278,11 @@ class SettingsStore: ObservableObject {
         ) }
     }
 
+    private var isInitializingSettingsStore = false
+
     init() {
+        isInitializingSettingsStore = true
+
         autoUpdateEnabled = defaults.bool(forKey: autoUpdateKey)
         blockThirdPartyTrackers = defaults.bool(forKey: trackingThirdPartyKey)
         blockFingerprinting = defaults.object(forKey: fingerprintingKey) as? Bool ?? true
@@ -333,8 +351,11 @@ class SettingsStore: ObservableObject {
         passwordAutofillEnabled = defaults.object(forKey: passwordAutofillEnabledKey) as? Bool ?? true
         passwordAutofillSubmitEnabled = defaults.object(forKey: passwordAutofillSubmitEnabledKey) as? Bool ?? true
         passwordSavePromptsEnabled = defaults.object(forKey: passwordSavePromptsEnabledKey) as? Bool ?? true
+        iCloudSyncEnabled = defaults.object(forKey: iCloudSyncEnabledKey) as? Bool ?? false
         suppressedPasswordSavePromptHosts = Set(defaults
             .stringArray(forKey: suppressedPasswordSavePromptHostsKey) ?? [])
+
+        isInitializingSettingsStore = false
     }
 
     // MARK: - Per-container helpers

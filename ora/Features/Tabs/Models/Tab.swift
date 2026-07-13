@@ -54,7 +54,7 @@ class Tab: ObservableObject, Identifiable {
     @Transient @Published var passwordOverlayState: PasswordAutofillOverlayState?
     @Transient @Published var passwordTriggerOverlayState: PasswordAutofillOverlayState?
 
-    @Relationship(inverse: \TabContainer.tabs) var container: TabContainer
+    @Relationship(inverse: \TabContainer.tabs) var container: TabContainer?
 
     /// Whether this tab is considered alive (recently accessed)
     var isAlive: Bool {
@@ -68,7 +68,7 @@ class Tab: ObservableObject, Identifiable {
         url: URL,
         title: String,
         favicon: URL? = nil,
-        container: TabContainer,
+        container: TabContainer? = nil,
         type: TabType = .normal,
         isPlayingMedia: Bool = false,
         order: Int,
@@ -165,12 +165,13 @@ class Tab: ObservableObject, Identifiable {
     func updateHistory() {
         if let historyManager = self.historyManager {
             Task { @MainActor in
+                guard let container else { return }
                 historyManager.record(
                     title: self.title,
                     url: self.url,
                     faviconURL: self.favicon,
                     faviconLocalFile: self.faviconLocalFile,
-                    container: self.container
+                    container: container
                 )
             }
         }
@@ -219,6 +220,10 @@ class Tab: ObservableObject, Identifiable {
 
         if passwordCoordinator == nil {
             passwordCoordinator = PasswordAutofillCoordinator(tab: self)
+        }
+
+        guard let container else {
+            return
         }
 
         let profile = WebProfileRegistry.shared.profile(for: container.id, isPrivate: isPrivate)
@@ -287,7 +292,12 @@ class Tab: ObservableObject, Identifiable {
 
         // 2) Otherwise, treat as a search query using the selected search engine
         let searchEngineService = SearchEngineService()
-        if let engine = searchEngineService.getDefaultSearchEngine(for: self.container.id),
+        guard let container else {
+            loadURLFallback(urlString: input)
+            return
+        }
+
+        if let engine = searchEngineService.getDefaultSearchEngine(for: container.id),
            let searchURL = searchEngineService.createSearchURL(for: engine, query: input)
         {
             browserPage?.load(URLRequest(url: searchURL))
@@ -300,6 +310,16 @@ class Tab: ObservableObject, Identifiable {
         ) {
             browserPage?.load(URLRequest(url: fallbackURL))
         }
+    }
+
+    private func loadURLFallback(urlString: String) {
+        guard let fallbackURL = URL(string: "https://www.google.com/search?client=safari&rls=en&ie=UTF-8&oe=UTF-8&q="
+            + (urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")
+        ) else {
+            return
+        }
+
+        browserPage?.load(URLRequest(url: fallbackURL))
     }
 
     func destroyWebView() {

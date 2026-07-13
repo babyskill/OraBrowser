@@ -4,7 +4,7 @@ import SwiftData
 /// SwiftData model for a browsing history entry
 @Model
 final class History {
-    @Attribute(.unique) var id: UUID // Unique identifier
+    var id: UUID // Unique identifier
     var url: URL
     var urlString: String
     var title: String

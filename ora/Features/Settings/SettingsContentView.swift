@@ -7,6 +7,7 @@ enum SettingsTab: String, Hashable, CaseIterable {
     case passwords
     case shortcuts
     case searchEngines
+    case sync
 
     var title: String {
         switch self {
@@ -15,6 +16,7 @@ enum SettingsTab: String, Hashable, CaseIterable {
         case .passwords: return String(localized: "Passwords")
         case .shortcuts: return String(localized: "Shortcuts")
         case .searchEngines: return String(localized: "Search")
+        case .sync: return String(localized: "Sync")
         }
     }
 
@@ -25,6 +27,7 @@ enum SettingsTab: String, Hashable, CaseIterable {
         case .passwords: return "key.horizontal"
         case .shortcuts: return "command"
         case .searchEngines: return "magnifyingglass"
+        case .sync: return "icloud"
         }
     }
 
@@ -40,6 +43,8 @@ enum SettingsTab: String, Hashable, CaseIterable {
             return String(localized: "Keyboard shortcuts and command mappings.")
         case .searchEngines:
             return String(localized: "Default search providers, AI engines, and custom shortcuts.")
+        case .sync:
+            return String(localized: "Synchronize your tabs, spaces, and browser settings across devices.")
         }
     }
 }
@@ -96,6 +101,8 @@ struct SettingsContentView: View {
             ShortcutsSettingsView()
         case .searchEngines:
             SearchEngineSettingsView()
+        case .sync:
+            SyncSettingsView()
         }
     }
 }

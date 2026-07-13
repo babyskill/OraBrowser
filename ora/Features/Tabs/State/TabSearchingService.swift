@@ -34,7 +34,7 @@ final class TabSearchingService: TabSearchingProviding {
                         .localizedStandardContains(
                             trimmedText
                         )
-                ) && tab.container.id == activeContainerId
+                ) && tab.container?.id == activeContainerId
             }
         }
 

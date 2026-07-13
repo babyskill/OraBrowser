@@ -37,6 +37,8 @@ targets:
       - package: FaviconFinder
       - package: SafariConverterLib
         product: ContentBlockerConverter
+      - target: oraWebApp
+        embed: false
 
     preBuildScripts:
       - name: "Copy Icon Bundle"
@@ -57,6 +59,15 @@ targets:
               echo "Using OraIcon.icon for Release build"
               cp -R "$ICON_SRC_RELEASE" "$ICON_DST"
           fi
+
+    postBuildScripts:
+      - name: "Copy WebApp Template"
+        inputFiles:
+          - "$(BUILT_PRODUCTS_DIR)/CapyWebApp.app"
+        outputFiles:
+          - "$(BUILT_PRODUCTS_DIR)/$(PRODUCT_NAME).app/Contents/Resources/CapyWebApp.app"
+        script: |
+          cp -R "$BUILT_PRODUCTS_DIR/CapyWebApp.app" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/Resources/"
 
     info:
       path: ora/Info/Info.plist
@@ -96,7 +107,15 @@ targets:
     entitlements:
       path: ora/Info/ora.entitlements
       properties:
-        com.apple.security.app-sandbox: true
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.com.orabrowser.app
+        com.apple.developer.ubiquity-container-identifiers:
+          - iCloud.com.orabrowser.app
+        com.apple.developer.icloud-services:
+          - CloudKit
+          - KeyValueStore
+        com.apple.developer.ubiquity-kvstore-identifier: com.orabrowser.app
+        com.apple.security.app-sandbox: false
         com.apple.security.assets.movies.read-only: true
         com.apple.security.assets.music.read-only: true
         com.apple.security.assets.pictures.read-only: true
@@ -120,6 +139,7 @@ targets:
         MARKETING_VERSION: 0.2.14
         CURRENT_PROJECT_VERSION: 105
         PRODUCT_NAME: Capy Browser
+        PRODUCT_MODULE_NAME: Ora
         PRODUCT_BUNDLE_IDENTIFIER: com.orabrowser.app
         GENERATE_INFOPLIST_FILE: YES
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -157,8 +177,22 @@ targets:
       - target: ora
     settings:
       base:
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/CapyBrowser.app/Contents/MacOS/CapyBrowser"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Capy Browser.app/Contents/MacOS/Capy Browser"
         BUNDLE_LOADER: "$(TEST_HOST)"
+
+  oraWebApp:
+    type: application
+    platform: "macOS"
+    deploymentTarget: "15.0"
+    sources:
+      - path: oraWebApp
+    settings:
+      base:
+        SWIFT_VERSION: 5.9
+        PRODUCT_NAME: CapyWebApp
+        PRODUCT_BUNDLE_IDENTIFIER: com.orabrowser.webapp
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleIconFile: AppIcon
 
 schemes:
   ora:

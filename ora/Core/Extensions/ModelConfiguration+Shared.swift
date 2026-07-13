@@ -7,10 +7,16 @@ extension ModelConfiguration {
         if isPrivate {
             return ModelConfiguration(isStoredInMemoryOnly: true)
         } else {
+            let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = UserDefaults
+                .standard
+                .bool(forKey: "settings.icloudSyncEnabled")
+                ? .private("iCloud.com.orabrowser.app")
+                : .none
             return ModelConfiguration(
                 "OraData",
                 schema: Schema([TabContainer.self, History.self, Download.self, CatalogRecord.self]),
-                url: URL.applicationSupportDirectory.appending(path: "Ora/OraData.sqlite")
+                url: URL.applicationSupportDirectory.appending(path: "Ora/OraData.sqlite"),
+                cloudKitDatabase: cloudKitDatabase
             )
         }
     }

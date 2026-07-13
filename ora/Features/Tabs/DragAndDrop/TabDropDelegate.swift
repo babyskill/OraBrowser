@@ -22,14 +22,16 @@ struct TabDropDelegate: DropDelegate {
                let uuid = UUID(uuidString: string)
             {
                 DispatchQueue.main.async {
+                    guard let container = self.item.container else { return }
+
                     // First try to find the tab in the target container
-                    var from = self.item.container.tabs.first(where: { $0.id == uuid })
+                    var from = container.tabs.first(where: { $0.id == uuid })
 
                     // If not found, try to find it in all containers of the same type
                     if from == nil {
                         // Look through all tabs in all containers to find the dragged tab
-                        for container in self.item.container.tabs.compactMap(\.container).unique() {
-                            if let foundTab = container.tabs.first(where: { $0.id == uuid }) {
+                        for relatedContainer in container.tabs.compactMap(\.container).unique() {
+                            if let foundTab = relatedContainer.tabs.first(where: { $0.id == uuid }) {
                                 from = foundTab
                                 break
                             }
@@ -48,7 +50,7 @@ struct TabDropDelegate: DropDelegate {
                                 dampingFraction: 0.8
                             )
                         ) {
-                            self.item.container
+                            container
                                 .reorderTabs(
                                     from: from,
                                     to: self.item

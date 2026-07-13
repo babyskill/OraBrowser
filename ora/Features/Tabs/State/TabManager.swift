@@ -20,7 +20,7 @@ private struct ClosedTabSnapshot {
 
     init(tab: Tab) {
         id = tab.id
-        containerID = tab.container.id
+        containerID = tab.container?.id ?? UUID()
         url = tab.url
         savedURL = tab.savedURL
         title = tab.title
@@ -346,7 +346,8 @@ class TabManager: ObservableObject {
     }
 
     func reorderTabs(from: Tab, toTab: Tab) {
-        from.container.reorderTabs(from: from, to: toTab)
+        guard let container = from.container else { return }
+        container.reorderTabs(from: from, to: toTab)
         try? modelContext.save()
     }
 
@@ -358,10 +359,11 @@ class TabManager: ObservableObject {
     func closeTab(tab: Tab, shouldTrackForRestore: Bool = true) {
         // If the closed tab was active, select another tab
         if self.activeTab?.id == tab.id {
-            if let nextTab = tab.container.tabs
-                .filter({ $0.id != tab.id && $0.isWebViewReady })
-                .sorted(by: { $0.lastAccessedAt ?? Date.distantPast > $1.lastAccessedAt ?? Date.distantPast })
-                .first
+            if let sourceContainer = tab.container,
+               let nextTab = sourceContainer.tabs
+               .filter({ $0.id != tab.id && $0.isWebViewReady })
+               .sorted(by: { $0.lastAccessedAt ?? Date.distantPast > $1.lastAccessedAt ?? Date.distantPast })
+               .first
             {
                 self.activateTab(nextTab)
 
@@ -459,7 +461,7 @@ class TabManager: ObservableObject {
         activeTab?.maybeIsActive = true
         tab.lastAccessedAt = Date()
         activeContainer = tab.container
-        tab.container.lastAccessedAt = Date()
+        tab.container?.lastAccessedAt = Date()
 
         // Lazy load WebView if not ready
         if !tab.isWebViewReady {

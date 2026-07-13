@@ -9,12 +9,12 @@ class Folder: ObservableObject, Identifiable {
     var name: String
     var isOpened: Bool
 
-    @Relationship(inverse: \TabContainer.folders) var container: TabContainer
+    @Relationship(inverse: \TabContainer.folders) var container: TabContainer?
     init(
         id: UUID = UUID(),
         name: String,
         isOpened: Bool = false,
-        container: TabContainer
+        container: TabContainer? = nil
     ) {
         self.id = UUID()
         self.name = name

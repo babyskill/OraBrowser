@@ -296,8 +296,8 @@ final class PasswordAutofillCoordinator {
 
         let suggestions = Self.resolveSuggestions(
             for: focus,
-            matchingEntries: passwordManager.matchingEntries(for: pageURL, containerID: tab?.container.id),
-            emailSuggestions: passwordManager.emailSuggestions(for: tab?.container.id),
+            matchingEntries: passwordManager.matchingEntries(for: pageURL, containerID: tab?.container?.id),
+            emailSuggestions: passwordManager.emailSuggestions(for: tab?.container?.id),
             generatedPassword: focus.action == .createAccount ? passwordManager.generateStrongPassword() : nil
         )
 
@@ -370,7 +370,7 @@ final class PasswordAutofillCoordinator {
         }
 
         let matchingEntry = passwordManager
-            .matchingEntries(for: pageURL, containerID: tab?.container.id)
+            .matchingEntries(for: pageURL, containerID: tab?.container?.id)
             .first { $0.username == trimmedUsername }
 
         if let matchingEntry,
@@ -392,7 +392,7 @@ final class PasswordAutofillCoordinator {
                 for: pageURL,
                 username: trimmedUsername,
                 password: trimmedPassword,
-                containerID: self.tab?.container.id
+                containerID: self.tab?.container?.id
             )
         }
 
