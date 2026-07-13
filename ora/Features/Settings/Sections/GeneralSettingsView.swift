@@ -4,6 +4,7 @@ import SwiftUI
 struct GeneralSettingsView: View {
     @EnvironmentObject var appearanceManager: AppearanceManager
     @EnvironmentObject var updateService: UpdateService
+    @AppStorage("ui.toolbar.showNavigationButtons") private var showNavigationButtons: Bool = false
     @StateObject private var settings = SettingsStore.shared
     @StateObject private var defaultBrowserManager = DefaultBrowserManager.shared
 
@@ -35,6 +36,10 @@ struct GeneralSettingsView: View {
             }
 
             AppearanceSelector(selection: $appearanceManager.appearance)
+
+            SettingsCard(header: "Appearance & Interface") {
+                Toggle("Show navigation buttons (Back, Forward, Refresh) in Toolbar", isOn: $showNavigationButtons)
+            }
 
             SettingsCard(header: "Tab Management") {
                 VStack(alignment: .leading, spacing: 8) {

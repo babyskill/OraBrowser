@@ -168,35 +168,37 @@ struct URLBar: View {
                     .oraShortcutHelp("Toggle Sidebar", for: KeyboardShortcuts.App.toggleSidebar)
                 }
 
-                // Back button
-                URLBarButton(
-                    systemName: "chevron.left",
-                    isEnabled: tabManager.activeTab?.canGoBack ?? false,
-                    foregroundColor: buttonForegroundColor,
-                    action: { tabManager.activeTab?.goBack() }
-                )
-                .oraShortcut(KeyboardShortcuts.Navigation.back)
-                .oraShortcutHelp("Go Back", for: KeyboardShortcuts.Navigation.back)
+                if toolbarManager.showNavigationButtons {
+                    // Back button
+                    URLBarButton(
+                        systemName: "chevron.left",
+                        isEnabled: tabManager.activeTab?.canGoBack ?? false,
+                        foregroundColor: buttonForegroundColor,
+                        action: { tabManager.activeTab?.goBack() }
+                    )
+                    .oraShortcut(KeyboardShortcuts.Navigation.back)
+                    .oraShortcutHelp("Go Back", for: KeyboardShortcuts.Navigation.back)
 
-                // Forward button
-                URLBarButton(
-                    systemName: "chevron.right",
-                    isEnabled: tabManager.activeTab?.canGoForward ?? false,
-                    foregroundColor: buttonForegroundColor,
-                    action: { tabManager.activeTab?.goForward() }
-                )
-                .oraShortcut(KeyboardShortcuts.Navigation.forward)
-                .oraShortcutHelp("Go Forward", for: KeyboardShortcuts.Navigation.forward)
+                    // Forward button
+                    URLBarButton(
+                        systemName: "chevron.right",
+                        isEnabled: tabManager.activeTab?.canGoForward ?? false,
+                        foregroundColor: buttonForegroundColor,
+                        action: { tabManager.activeTab?.goForward() }
+                    )
+                    .oraShortcut(KeyboardShortcuts.Navigation.forward)
+                    .oraShortcutHelp("Go Forward", for: KeyboardShortcuts.Navigation.forward)
 
-                // Reload button
-                URLBarButton(
-                    systemName: "arrow.clockwise",
-                    isEnabled: tabManager.activeTab != nil,
-                    foregroundColor: buttonForegroundColor,
-                    action: { tabManager.activeTab?.reload() }
-                )
-                .oraShortcut(KeyboardShortcuts.Navigation.reload)
-                .oraShortcutHelp("Reload This Page", for: KeyboardShortcuts.Navigation.reload)
+                    // Reload button
+                    URLBarButton(
+                        systemName: "arrow.clockwise",
+                        isEnabled: tabManager.activeTab != nil,
+                        foregroundColor: buttonForegroundColor,
+                        action: { tabManager.activeTab?.reload() }
+                    )
+                    .oraShortcut(KeyboardShortcuts.Navigation.reload)
+                    .oraShortcutHelp("Reload This Page", for: KeyboardShortcuts.Navigation.reload)
+                }
 
                 // URL field area - morphs between display and launcher input
                 Group {
