@@ -7,6 +7,8 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
 
     private let webView: WKWebView
     private let messageNames: [String]
+    private var aiActivityMessageHandler: AIActivityMessageHandler?
+    private var installedAIScriptSources: Set<String> = []
     private var originalURL: URL?
     private(set) var lastCommittedURL: URL?
     private(set) var isDownloadNavigation = false
@@ -125,6 +127,7 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
     }
 
     func load(_ request: URLRequest) {
+        installDomainAIScripts(for: request.url)
         guard isReadyForNavigation else {
             pendingLoadRequest = request
             pendingReload = false
@@ -187,7 +190,24 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
         for messageName in messageNames {
             controller.removeScriptMessageHandler(forName: messageName)
         }
+        if aiActivityMessageHandler != nil {
+            controller.removeScriptMessageHandler(forName: "oraAIActivity")
+            aiActivityMessageHandler?.delegate = nil
+            aiActivityMessageHandler = nil
+        }
         webView.removeFromSuperview()
+    }
+
+    func registerAIActivityHandler(catalogID: CatalogID, delegate: AIActivityDelegate) {
+        let controller = webView.configuration.userContentController
+        if aiActivityMessageHandler != nil {
+            controller.removeScriptMessageHandler(forName: "oraAIActivity")
+        }
+
+        let handler = AIActivityMessageHandler(catalogID: catalogID, delegate: delegate)
+        aiActivityMessageHandler = handler
+        controller.add(handler, name: "oraAIActivity")
+        addAIUserScript(AIUserScripts.mediaPlayback)
     }
 
     func bypassSSL(for host: String) {
@@ -197,6 +217,7 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
     private func flushPendingNavigationIfNeeded() {
         if let pendingLoadRequest {
             self.pendingLoadRequest = nil
+            installDomainAIScripts(for: pendingLoadRequest.url)
             webView.load(pendingLoadRequest)
             return
         }
@@ -205,6 +226,24 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
             pendingReload = false
             webView.reload()
         }
+    }
+
+    private func installDomainAIScripts(for url: URL?) {
+        guard let host = url?.host?.lowercased() else { return }
+        if host == "chatgpt.com" || host.hasSuffix(".chatgpt.com") || host == "chat.openai.com" {
+            addAIUserScript(AIUserScripts.chatGPT)
+        } else if host == "gemini.google.com" {
+            addAIUserScript(AIUserScripts.gemini)
+        }
+    }
+
+    private func addAIUserScript(_ source: String) {
+        guard installedAIScriptSources.insert(source).inserted else { return }
+        webView.configuration.userContentController.addUserScript(WKUserScript(
+            source: source,
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        ))
     }
 
     private func emitNavigationEvent(
@@ -252,6 +291,7 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
         decidePolicyFor navigationAction: WKNavigationAction,
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {
+        installDomainAIScripts(for: navigationAction.request.url)
         let action = BrowserNavigationAction(
             request: navigationAction.request,
             modifierFlags: navigationAction.modifierFlags

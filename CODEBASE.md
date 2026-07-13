@@ -52,7 +52,8 @@ scripts/                         # Build, release and publishing automation
 | `ora/Features/Privacy/` | Content blocking, privacy policy and per-space settings |
 | `ora/Features/Downloads/` | Download persistence, progress and UI |
 | `ora/Features/Settings/` | User-facing application settings |
-| `ora/Features/Catalog/ResourceManager/` | Centralized ResourceManager, PolicyEngine, PressureMonitor, and SnapshotStore |
+| `ora/Features/Catalog/ResourceManager/` | Centralized ResourceManager, PolicyEngine, PressureMonitor, SnapshotStore, and ActivityLease |
+
 
 
 ### UI / Views
@@ -80,6 +81,8 @@ scripts/                         # Build, release and publishing automation
 | `docs/OraBrowser-Phase2-Implementation-Plan.md` | Phase 2 catalog model, AppKit window shell and WindowGroup migration plan |
 | `docs/OraBrowser-Phase3-Implementation-Plan.md` | Phase 3 WindowPool, shell reset, instant snapshot surface and independent window/page lease plan |
 | `docs/OraBrowser-Phase4-Implementation-Plan.md` | Phase 4 ResourceManager, L0-L5 Hibernation Policy, PressureMonitor, and SnapshotStore plan |
+| `docs/OraBrowser-Phase5-Implementation-Plan.md` | Phase 5 AI Activity Protection, user scripts and activity leases plan |
+
 
 
 ---
@@ -98,6 +101,8 @@ scripts/                         # Build, release and publishing automation
 - 2026-07-12: Added the detailed Phase 2 catalog model and AppKit-managed window implementation plan.
 - 2026-07-12: Added the detailed Phase 3 WindowPool, ShellResetContract, SnapshotOverlay and lease-separation implementation plan.
 - 2026-07-12: Added the detailed Phase 4 ResourceManager, L0-L5 Hibernation Policy, PressureMonitor, and SnapshotStore implementation plan and tests.
+- 2026-07-13: Added the detailed Phase 5 AI Activity Protection (ActivityLease, UserScripts, and WKScriptMessageHandler) implementation and tests.
+
 
 
 ---

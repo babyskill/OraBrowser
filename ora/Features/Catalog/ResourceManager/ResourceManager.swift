@@ -106,6 +106,7 @@ final class ResourceManager {
     let snapshotStore: SnapshotStore
 
     private var states: [CatalogID: CatalogResourceState] = [:]
+    private var leases: [CatalogID: Set<ActivityLease>] = [:]
     private var budgetConfig: BudgetConfig
     private var callbacks: ResourceManagerCallbacks
     private var evaluationTimer: Timer?
@@ -243,6 +244,43 @@ final class ResourceManager {
         states[catalogID] = state
     }
 
+    // MARK: - Lease Management
+
+    func acquireLease(
+        for catalogID: CatalogID,
+        type: LeaseType,
+        duration: TimeInterval,
+        metadata: [String: String] = [:]
+    ) {
+        let lease = ActivityLease(
+            catalogID: catalogID,
+            type: type,
+            expiresAt: Date().addingTimeInterval(duration),
+            metadata: metadata
+        )
+        var set = leases[catalogID] ?? []
+        set = set.filter { $0.type != type }
+        set.insert(lease)
+        leases[catalogID] = set
+        updateActivityState(for: catalogID)
+        logger.debug("Lease acquired: \(type.rawValue, privacy: .public) for \(catalogID.rawValue, privacy: .public)")
+    }
+
+    func releaseLease(for catalogID: CatalogID, type: LeaseType) {
+        guard var set = leases[catalogID] else { return }
+        set = set.filter { $0.type != type }
+        leases[catalogID] = set.isEmpty ? nil : set
+        updateActivityState(for: catalogID)
+        logger.debug("Lease released: \(type.rawValue, privacy: .public) for \(catalogID.rawValue, privacy: .public)")
+    }
+
+    func hasActiveLeases(for catalogID: CatalogID) -> Bool {
+        guard var set = leases[catalogID] else { return false }
+        set = set.filter { !$0.isExpired }
+        leases[catalogID] = set.isEmpty ? nil : set
+        return !set.isEmpty
+    }
+
     // MARK: - Query
 
     func state(for catalogID: CatalogID) -> CatalogResourceState? {
@@ -273,11 +311,18 @@ final class ResourceManager {
 
     // MARK: - Private: Evaluation
 
+    private func updateActivityState(for catalogID: CatalogID) {
+        let active = hasActiveLeases(for: catalogID)
+        setActiveActivity(active, for: catalogID)
+    }
+
     private func evaluateAllStates() {
         let now = Date()
         let pressureLevel = pressureMonitor.currentLevel
 
         for (catalogID, state) in states where state.level < .l5Recycled {
+            guard !hasActiveLeases(for: catalogID) else { continue }
+
             let nextLevel = policyEngine.nextLevel(
                 from: state.level,
                 state: state,
@@ -373,6 +418,7 @@ final class ResourceManager {
 
     private func evictToL4(catalogID: CatalogID) {
         guard var state = states[catalogID], state.level < .l4DeepHibernation else { return }
+        guard !hasActiveLeases(for: catalogID) else { return }
 
         state.level = .l4DeepHibernation
         states[catalogID] = state

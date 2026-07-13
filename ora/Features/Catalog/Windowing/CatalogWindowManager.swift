@@ -281,6 +281,7 @@ final class CatalogWindowManager {
                     )
                 }
                 pageLeases[snapshot.id] = pageLease
+                pageLease.browserPage.registerAIActivityHandler(catalogID: snapshot.id, delegate: self)
                 try windowLease.attach(pageLease)
                 pageLease.load(URLRequest(url: snapshot.currentURL))
             } catch {
@@ -366,6 +367,17 @@ final class CatalogWindowManager {
         case .userInitiated: .userClose
         case .terminate: .terminate
         case .allWindows: .allWindows
+        }
+    }
+}
+
+extension CatalogWindowManager: AIActivityDelegate {
+    func didReceiveActivityUpdate(catalogID: CatalogID, type: LeaseType, isStarting: Bool) {
+        guard pageLeases[catalogID] != nil else { return }
+        if isStarting {
+            resourceManager.acquireLease(for: catalogID, type: type, duration: 300)
+        } else {
+            resourceManager.releaseLease(for: catalogID, type: type)
         }
     }
 }
