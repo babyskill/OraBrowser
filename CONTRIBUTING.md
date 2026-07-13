@@ -19,8 +19,8 @@ This guide covers the workflow and expectations for contributing to Ora Browser.
 ### Getting Started
 
 ```bash
-git clone https://github.com/the-ora/browser.git
-cd browser
+git clone https://github.com/babyskill/OraBrowser.git
+cd OraBrowser
 ./scripts/setup.sh
 open Ora.xcodeproj
 ```

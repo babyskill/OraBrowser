@@ -34,8 +34,8 @@ Ora is a macOS browser built with SwiftUI, AppKit, and WebKit. The project aims 
 ## Quick Start
 
 ```bash
-git clone https://github.com/the-ora/browser.git
-cd browser
+git clone https://github.com/babyskill/OraBrowser.git
+cd OraBrowser
 ./scripts/setup.sh
 open Ora.xcodeproj
 ```
@@ -53,7 +53,7 @@ The setup script installs required tooling, installs git hooks, and regenerates 
 
 - [Contributing](CONTRIBUTING.md)
 - [Roadmap](ROADMAP.md)
-- [Wiki](https://github.com/the-ora/browser/wiki)
+- [Wiki](https://github.com/babyskill/OraBrowser/wiki)
 - [Security](SECURITY.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 

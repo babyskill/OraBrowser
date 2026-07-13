@@ -16,7 +16,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/_common.sh"
 
-REPO="the-ora/browser"
+REPO="babyskill/OraBrowser"
 
 load_env ORA_PRIVATE_KEY
 
@@ -142,4 +142,4 @@ if [[ "$STASH_CREATED" == true ]]; then
     git stash pop 2>/dev/null || true
 fi
 
-green "Published! Appcast: https://the-ora.github.io/browser/appcast.xml"
+green "Published! Appcast: https://babyskill.github.io/OraBrowser/appcast.xml"
