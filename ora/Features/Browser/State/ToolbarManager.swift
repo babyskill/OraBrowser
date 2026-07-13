@@ -28,10 +28,25 @@ enum UserAgentMode: String, CaseIterable, Identifiable {
     }
 }
 
+enum QuickTabSwitcherStyle: String, CaseIterable, Identifiable {
+    case horizontal
+    case vertical
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .horizontal: return "Horizontal"
+        case .vertical: return "Vertical"
+        }
+    }
+}
+
 class ToolbarManager: ObservableObject {
     @AppStorage("ui.toolbar.hidden") var isToolbarHidden: Bool = false
     @AppStorage("ui.toolbar.showfullurl") var showFullURL: Bool = true
     @AppStorage("ui.toolbar.showNavigationButtons") var showNavigationButtons: Bool = false
     @AppStorage("ui.toolbar.showQuickTabSwitcher") var showQuickTabSwitcher: Bool = true
     @AppStorage("ui.userAgentMode") var userAgentMode: UserAgentMode = .tablet
+    @AppStorage("ui.toolbar.quickTabSwitcherStyle") var quickTabSwitcherStyle: QuickTabSwitcherStyle = .horizontal
 }

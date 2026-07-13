@@ -7,6 +7,8 @@ struct GeneralSettingsView: View {
     @AppStorage("ui.toolbar.showNavigationButtons") private var showNavigationButtons: Bool = false
     @AppStorage("ui.toolbar.showQuickTabSwitcher") private var showQuickTabSwitcher: Bool = true
     @AppStorage("ui.userAgentMode") private var userAgentMode: UserAgentMode = .tablet
+    @AppStorage("ui.toolbar.quickTabSwitcherStyle") private var quickTabSwitcherStyle: QuickTabSwitcherStyle =
+        .horizontal
     @StateObject private var settings = SettingsStore.shared
     @StateObject private var defaultBrowserManager = DefaultBrowserManager.shared
 
@@ -53,6 +55,17 @@ struct GeneralSettingsView: View {
                         Picker("", selection: $userAgentMode) {
                             ForEach(UserAgentMode.allCases) { mode in
                                 Text(mode.displayName).tag(mode)
+                            }
+                        }
+                        .frame(width: 120)
+                    }
+
+                    HStack {
+                        Text("Quick Tab Switcher Style:")
+                        Spacer()
+                        Picker("", selection: $quickTabSwitcherStyle) {
+                            ForEach(QuickTabSwitcherStyle.allCases) { style in
+                                Text(style.displayName).tag(style)
                             }
                         }
                         .frame(width: 120)

@@ -6,42 +6,26 @@ struct QuickTabSwitcherPopup: View {
     @EnvironmentObject var historyManager: HistoryManager
     @EnvironmentObject var downloadManager: DownloadManager
 
+    @AppStorage("ui.toolbar.quickTabSwitcherStyle") private var style: QuickTabSwitcherStyle = .horizontal
+
     var body: some View {
         if let container = tabManager.activeContainer, !container.tabs.isEmpty {
             let sortedTabs = container.tabs.sorted(by: { $0.order < $1.order })
-            HStack(spacing: 8) {
-                ForEach(sortedTabs) { tab in
-                    let isSelected = tabManager.isActive(tab)
-                    Button {
-                        tabManager.activeTab = tab
-                        if !tab.isWebViewReady {
-                            tab.restoreTransientState(
-                                historyManager: historyManager,
-                                downloadManager: downloadManager,
-                                tabManager: tabManager,
-                                isPrivate: privacyMode.isPrivate
-                            )
-                        }
-                    } label: {
-                        FavIcon(
-                            isWebViewReady: tab.isWebViewReady,
-                            favicon: tab.favicon,
-                            faviconLocalFile: tab.faviconLocalFile,
-                            textColor: isSelected ? .white : .primary.opacity(0.8),
-                            isPlayingMedia: tab.isPlayingMedia
-                        )
-                        .padding(6)
-                        .background(
-                            Circle()
-                                .fill(isSelected ? Color.accentColor : Color.primary.opacity(0.08))
-                        )
+            Group {
+                if style == .horizontal {
+                    HStack(spacing: 8) {
+                        content(for: sortedTabs)
                     }
-                    .buttonStyle(.plain)
-                    .help(tab.title)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                } else {
+                    VStack(spacing: 8) {
+                        content(for: sortedTabs)
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 8)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
             .background(
                 Capsule()
                     .fill(Material.thin)
@@ -51,6 +35,39 @@ struct QuickTabSwitcherPopup: View {
                 Capsule()
                     .stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
             )
+        }
+    }
+
+    @ViewBuilder
+    private func content(for sortedTabs: [Tab]) -> some View {
+        ForEach(sortedTabs) { tab in
+            let isSelected = tabManager.isActive(tab)
+            Button {
+                tabManager.activeTab = tab
+                if !tab.isWebViewReady {
+                    tab.restoreTransientState(
+                        historyManager: historyManager,
+                        downloadManager: downloadManager,
+                        tabManager: tabManager,
+                        isPrivate: privacyMode.isPrivate
+                    )
+                }
+            } label: {
+                FavIcon(
+                    isWebViewReady: tab.isWebViewReady,
+                    favicon: tab.favicon,
+                    faviconLocalFile: tab.faviconLocalFile,
+                    textColor: isSelected ? .white : .primary.opacity(0.8),
+                    isPlayingMedia: tab.isPlayingMedia
+                )
+                .padding(6)
+                .background(
+                    Circle()
+                        .fill(isSelected ? Color.accentColor : Color.primary.opacity(0.08))
+                )
+            }
+            .buttonStyle(.plain)
+            .help(tab.title)
         }
     }
 }

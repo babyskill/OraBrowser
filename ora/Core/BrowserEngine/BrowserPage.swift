@@ -536,8 +536,11 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
     }
 
     @objc private func handleUserDefaultsChange() {
-        let modeRaw = UserDefaults.standard.string(forKey: "ui.userAgentMode") ?? "tablet"
-        let mode = UserAgentMode(rawValue: modeRaw) ?? .tablet
-        webView.customUserAgent = mode.userAgentString
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            let modeRaw = UserDefaults.standard.string(forKey: "ui.userAgentMode") ?? "tablet"
+            let mode = UserAgentMode(rawValue: modeRaw) ?? .tablet
+            self.webView.customUserAgent = mode.userAgentString
+        }
     }
 }
