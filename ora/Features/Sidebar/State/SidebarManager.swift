@@ -15,6 +15,7 @@ class SidebarManager: ObservableObject {
     @Published var hiddenSidebar = SideHolder.usingUserDefaults(.primary, key: "ui.sidebar.visibility")
 
     init() {
+        hiddenSidebar.side = .primary
         updateSidebarHidden()
     }
 

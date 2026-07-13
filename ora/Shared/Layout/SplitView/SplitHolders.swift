@@ -176,7 +176,7 @@ public class SideHolder: ObservableObject {
                     let value = UserDefaults.standard.value(forKey: key) as? String,
                     let side = SplitSide(rawValue: value)
                 else {
-                    return nil
+                    return hide
                 }
                 return side
             },

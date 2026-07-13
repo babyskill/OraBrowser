@@ -102,6 +102,17 @@ class Tab: ObservableObject, Identifiable {
         backgroundColor = Color(hex: backgroundColorHex)
     }
 
+    func updateTitle(_ newTitle: String) {
+        title = newTitle
+        objectWillChange.send()
+    }
+
+    func updateURL(_ newURL: URL) {
+        url = newURL
+        urlString = newURL.absoluteString
+        objectWillChange.send()
+    }
+
     /// Call this whenever the color is set
     func updateBackgroundColor(_ color: Color) {
         backgroundColor = color

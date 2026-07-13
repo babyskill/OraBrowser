@@ -63,14 +63,14 @@ final class TabBrowserPageDelegate: BrowserPageDelegate {
             tab.isLoading = event.isLoading
             tab.loadingProgress = event.progress
             if let url = event.url {
-                tab.url = url
+                tab.updateURL(url)
             }
 
         case .committed:
             tab.isLoading = event.isLoading
             tab.loadingProgress = event.progress
             if let title = event.title, !title.isEmpty {
-                tab.title = title
+                tab.updateTitle(title)
                 MainActor.assumeIsolated {
                     mediaController?.syncTitleForTab(tab.id, newTitle: title)
                 }
@@ -80,13 +80,13 @@ final class TabBrowserPageDelegate: BrowserPageDelegate {
             tab.isLoading = event.isLoading
             tab.loadingProgress = event.progress
             if let title = event.title, !title.isEmpty {
-                tab.title = title
+                tab.updateTitle(title)
                 MainActor.assumeIsolated {
                     mediaController?.syncTitleForTab(tab.id, newTitle: title)
                 }
             }
             if let url = event.url {
-                tab.url = url
+                tab.updateURL(url)
                 if tab.favicon == nil {
                     tab.setFavicon()
                 }
@@ -235,8 +235,10 @@ final class TabBrowserPageDelegate: BrowserPageDelegate {
         }
 
         let oldTitle = tab.title
-        tab.title = update.title
-        tab.url = URL(string: update.href) ?? tab.url
+        tab.updateTitle(update.title)
+        if let newURL = URL(string: update.href) {
+            tab.updateURL(newURL)
+        }
         tab.setFavicon()
         tab.updateHistory()
 
