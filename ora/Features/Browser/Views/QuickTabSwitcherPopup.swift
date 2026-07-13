@@ -12,6 +12,7 @@ struct QuickTabSwitcherPopup: View {
 
     @State private var dragOffset: CGFloat = 0
     @State private var isDragging = false
+    @State private var isHovering = false
 
     var body: some View {
         if let container = tabManager.activeContainer, !container.tabs.isEmpty {
@@ -59,17 +60,103 @@ struct QuickTabSwitcherPopup: View {
     }
 
     @ViewBuilder
+    private func tabButton(for tab: Tab) -> some View {
+        let isSelected = tabManager.isActive(tab)
+        Button {
+            tabManager.activeTab = tab
+            if !tab.isWebViewReady {
+                tab.restoreTransientState(
+                    historyManager: historyManager,
+                    downloadManager: downloadManager,
+                    tabManager: tabManager,
+                    isPrivate: privacyMode.isPrivate
+                )
+            }
+        } label: {
+            FavIcon(
+                isWebViewReady: tab.isWebViewReady,
+                favicon: tab.favicon,
+                faviconLocalFile: tab.faviconLocalFile,
+                textColor: isSelected ? .white : .primary.opacity(0.8),
+                isPlayingMedia: tab.isPlayingMedia
+            )
+            .scaleEffect(tab.isPlayingMedia ? 0.8 : 1.0)
+            .padding(6)
+            .frame(width: 32, height: 32)
+            .background(
+                Circle()
+                    .fill(isSelected ? Color.accentColor : Color.primary.opacity(0.08))
+            )
+        }
+        .buttonStyle(.plain)
+        .frame(width: 32, height: 32)
+    }
+
+    @ViewBuilder
     private func capsuleView(for sortedTabs: [Tab]) -> some View {
+        let itemWidth: CGFloat = 32
+        let spacing: CGFloat = 8
+        let maxVisibleItems = 5
+        let limitWidth = CGFloat(maxVisibleItems) * itemWidth + CGFloat(maxVisibleItems - 1) * spacing
+
         Group {
             if style == .horizontal {
-                HStack(spacing: 8) {
-                    content(for: sortedTabs)
+                Group {
+                    if !isHovering {
+                        if let activeTab = sortedTabs.first(where: { tabManager.isActive($0) }) ?? sortedTabs.first {
+                            tabButton(for: activeTab)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                    } else {
+                        if sortedTabs.count <= maxVisibleItems {
+                            HStack(spacing: spacing) {
+                                ForEach(sortedTabs) { tab in
+                                    tabButton(for: tab)
+                                }
+                            }
+                            .transition(.opacity)
+                        } else {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: spacing) {
+                                    ForEach(sortedTabs) { tab in
+                                        tabButton(for: tab)
+                                    }
+                                }
+                            }
+                            .frame(width: limitWidth)
+                            .transition(.opacity)
+                        }
+                    }
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)
             } else {
-                VStack(spacing: 8) {
-                    content(for: sortedTabs)
+                Group {
+                    if !isHovering {
+                        if let activeTab = sortedTabs.first(where: { tabManager.isActive($0) }) ?? sortedTabs.first {
+                            tabButton(for: activeTab)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                    } else {
+                        if sortedTabs.count <= maxVisibleItems {
+                            VStack(spacing: spacing) {
+                                ForEach(sortedTabs) { tab in
+                                    tabButton(for: tab)
+                                }
+                            }
+                            .transition(.opacity)
+                        } else {
+                            ScrollView(.vertical, showsIndicators: false) {
+                                VStack(spacing: spacing) {
+                                    ForEach(sortedTabs) { tab in
+                                        tabButton(for: tab)
+                                    }
+                                }
+                            }
+                            .frame(height: limitWidth)
+                            .transition(.opacity)
+                        }
+                    }
                 }
                 .padding(.horizontal, 6)
                 .padding(.vertical, 8)
@@ -91,6 +178,9 @@ struct QuickTabSwitcherPopup: View {
             y: isDragging ? 6 : 3
         )
         .onHover { hovering in
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                isHovering = hovering
+            }
             if hovering {
                 if !isDragging {
                     NSCursor.openHand.set()
@@ -100,37 +190,5 @@ struct QuickTabSwitcherPopup: View {
             }
         }
         .animation(.spring(response: 0.25, dampingFraction: 0.8), value: isDragging)
-    }
-
-    @ViewBuilder
-    private func content(for sortedTabs: [Tab]) -> some View {
-        ForEach(sortedTabs) { tab in
-            let isSelected = tabManager.isActive(tab)
-            Button {
-                tabManager.activeTab = tab
-                if !tab.isWebViewReady {
-                    tab.restoreTransientState(
-                        historyManager: historyManager,
-                        downloadManager: downloadManager,
-                        tabManager: tabManager,
-                        isPrivate: privacyMode.isPrivate
-                    )
-                }
-            } label: {
-                FavIcon(
-                    isWebViewReady: tab.isWebViewReady,
-                    favicon: tab.favicon,
-                    faviconLocalFile: tab.faviconLocalFile,
-                    textColor: isSelected ? .white : .primary.opacity(0.8),
-                    isPlayingMedia: tab.isPlayingMedia
-                )
-                .padding(6)
-                .background(
-                    Circle()
-                        .fill(isSelected ? Color.accentColor : Color.primary.opacity(0.08))
-                )
-            }
-            .buttonStyle(.plain)
-        }
     }
 }
