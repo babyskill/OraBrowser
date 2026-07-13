@@ -27,7 +27,7 @@ else
         CODE_SIGNING_REQUIRED=NO
 fi
 
-APP_PATH="build/DerivedData/Build/Products/Debug/CapyBrowser.app"
+APP_PATH="build/DerivedData/Build/Products/Debug/Capy Browser.app"
 if [[ -d "$APP_PATH" ]]; then
     echo "========================================"
     echo "Build succeeded! Launching CapyBrowser..."
