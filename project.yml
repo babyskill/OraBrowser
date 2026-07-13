@@ -1,6 +1,8 @@
 name: Ora
 options:
   bundleIdPrefix: com.orabrowser
+  localizations: [en, vi]
+  developmentLanguage: en
 
 packages:
   Sparkle:

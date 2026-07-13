@@ -10,9 +10,9 @@ enum UserAgentMode: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .tablet: return "Tablet"
-        case .desktop: return "Desktop"
-        case .mobile: return "Mobile"
+        case .tablet: return String(localized: "Tablet")
+        case .desktop: return String(localized: "Desktop")
+        case .mobile: return String(localized: "Mobile")
         }
     }
 
@@ -36,8 +36,8 @@ enum QuickTabSwitcherStyle: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .horizontal: return "Horizontal"
-        case .vertical: return "Vertical"
+        case .horizontal: return String(localized: "Horizontal")
+        case .vertical: return String(localized: "Vertical")
         }
     }
 }

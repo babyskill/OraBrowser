@@ -42,7 +42,7 @@
     "multiAgent": {
       "enabled": true,
       "routingMode": "cost-optimized",
-      "audioAlerts": true,
+      "audioAlerts": false,
       "runners": {
         "claude": "claude",
         "codex": "codex",
@@ -105,5 +105,6 @@
   },
   "projectGoals": [],
   "createdDate": "2026-07-12",
-  "lastUpdated": "2026-07-12"
+  "lastUpdated": "2026-07-12",
+  "autoVerification": true
 }

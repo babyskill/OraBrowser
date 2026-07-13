@@ -10,11 +10,11 @@ enum SettingsTab: String, Hashable, CaseIterable {
 
     var title: String {
         switch self {
-        case .general: return "General"
-        case .spaces: return "Spaces"
-        case .passwords: return "Passwords"
-        case .shortcuts: return "Shortcuts"
-        case .searchEngines: return "Search"
+        case .general: return String(localized: "General")
+        case .spaces: return String(localized: "Spaces")
+        case .passwords: return String(localized: "Passwords")
+        case .shortcuts: return String(localized: "Shortcuts")
+        case .searchEngines: return String(localized: "Search")
         }
     }
 
@@ -31,15 +31,15 @@ enum SettingsTab: String, Hashable, CaseIterable {
     var subtitle: String {
         switch self {
         case .general:
-            return "Browser defaults, app behavior, and software updates."
+            return String(localized: "Browser defaults, app behavior, and software updates.")
         case .spaces:
-            return "Space-specific defaults and per-space data controls."
+            return String(localized: "Space-specific defaults and per-space data controls.")
         case .passwords:
-            return "Password manager integration, vault access, and autofill behavior."
+            return String(localized: "Password manager integration, vault access, and autofill behavior.")
         case .shortcuts:
-            return "Keyboard shortcuts and command mappings."
+            return String(localized: "Keyboard shortcuts and command mappings.")
         case .searchEngines:
-            return "Default search providers, AI engines, and custom shortcuts."
+            return String(localized: "Default search providers, AI engines, and custom shortcuts.")
         }
     }
 }
