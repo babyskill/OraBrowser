@@ -3,7 +3,7 @@
 > Global rules are automatically loaded by your agent runner. This file is for project-scoped rules.
 
 ## Project Scope Rules
-- (Add project-specific rules here)
+- Sau khi hoàn thành bất kỳ tác vụ chỉnh sửa code, tính năng hoặc sửa lỗi nào, Agent bắt buộc phải chạy script `scripts/run-debug.sh` để biên dịch và tự động mở ứng dụng cho người dùng test.
 
 Additional project context can be found in:
 - `.project-identity`
