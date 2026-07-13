@@ -6,6 +6,7 @@ struct GeneralSettingsView: View {
     @EnvironmentObject var updateService: UpdateService
     @AppStorage("ui.toolbar.showNavigationButtons") private var showNavigationButtons: Bool = false
     @AppStorage("ui.toolbar.showQuickTabSwitcher") private var showQuickTabSwitcher: Bool = true
+    @AppStorage("ui.userAgentMode") private var userAgentMode: UserAgentMode = .tablet
     @StateObject private var settings = SettingsStore.shared
     @StateObject private var defaultBrowserManager = DefaultBrowserManager.shared
 
@@ -42,6 +43,20 @@ struct GeneralSettingsView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Toggle("Show navigation buttons (Back, Forward, Refresh) in Toolbar", isOn: $showNavigationButtons)
                     Toggle("Show Quick Tab Switcher at bottom-left when Sidebar is hidden", isOn: $showQuickTabSwitcher)
+
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    HStack {
+                        Text("Default User Agent:")
+                        Spacer()
+                        Picker("", selection: $userAgentMode) {
+                            ForEach(UserAgentMode.allCases) { mode in
+                                Text(mode.displayName).tag(mode)
+                            }
+                        }
+                        .frame(width: 120)
+                    }
                 }
             }
 

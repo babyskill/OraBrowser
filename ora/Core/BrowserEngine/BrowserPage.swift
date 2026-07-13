@@ -80,6 +80,17 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
         webView.allowsBackForwardNavigationGestures = configuration.allowsBackForwardNavigationGestures
         webView.wantsLayer = true
         webView.isInspectable = configuration.allowsInspectableDebugging
+
+        let initialModeRaw = UserDefaults.standard.string(forKey: "ui.userAgentMode") ?? "tablet"
+        let initialMode = UserAgentMode(rawValue: initialModeRaw) ?? .tablet
+        webView.customUserAgent = initialMode.userAgentString
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleUserDefaultsChange),
+            name: UserDefaults.didChangeNotification,
+            object: nil
+        )
         if let layer = webView.layer {
             layer.isOpaque = true
             layer.drawsAsynchronously = true
@@ -518,5 +529,15 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
             defaultText: defaultText,
             completion: completionHandler
         )
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func handleUserDefaultsChange() {
+        let modeRaw = UserDefaults.standard.string(forKey: "ui.userAgentMode") ?? "tablet"
+        let mode = UserAgentMode(rawValue: modeRaw) ?? .tablet
+        webView.customUserAgent = mode.userAgentString
     }
 }
