@@ -171,8 +171,13 @@ struct SyncSettingsView: View {
         }.value
 
         guard hasUbiquity else {
-            accountStatus = .couldNotDetermine
-            syncErrorMessage = "iCloud container is unavailable: this build may not have iCloud entitlements."
+            #if DEBUG
+                accountStatus = .available
+                syncErrorMessage = "Debug mock: iCloud container check failed, but continuing as Connected for local flow testing."
+            #else
+                accountStatus = .couldNotDetermine
+                syncErrorMessage = "iCloud container is unavailable: this build may not have iCloud entitlements."
+            #endif
             isCheckingAccount = false
             return
         }
@@ -181,8 +186,13 @@ struct SyncSettingsView: View {
             let status = try await CKContainer(identifier: "iCloud.com.orabrowser.app").accountStatus()
             accountStatus = status
         } catch {
-            accountStatus = .couldNotDetermine
-            syncErrorMessage = error.localizedDescription
+            #if DEBUG
+                accountStatus = .available
+                syncErrorMessage = "Debug mock: CKContainer.accountStatus failed (\(error.localizedDescription)); using Connected status for local flow testing."
+            #else
+                accountStatus = .couldNotDetermine
+                syncErrorMessage = error.localizedDescription
+            #endif
         }
 
         isCheckingAccount = false
