@@ -52,7 +52,7 @@ cat > "$EXPORT_OPTIONS_PLIST" <<EOF
     <string>${TEAM_ID}</string>
     <key>provisioningProfiles</key>
     <dict>
-        <key>com.orabrowser.app</key>
+        <key>com.capybara.moon.browser</key>
         <string>${DEVELOPER_ID_PROFILE}</string>
     </dict>
 </dict>

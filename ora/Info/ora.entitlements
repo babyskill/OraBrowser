@@ -4,11 +4,11 @@
 <dict>
 	<key>com.apple.developer.icloud-container-identifiers</key>
 	<array>
-		<string>iCloud.com.orabrowser.app</string>
+		<string>iCloud.com.capybara.moon.browser</string>
 	</array>
 	<key>com.apple.developer.ubiquity-container-identifiers</key>
 	<array>
-		<string>iCloud.com.orabrowser.app</string>
+		<string>iCloud.com.capybara.moon.browser</string>
 	</array>
 	<key>com.apple.developer.icloud-services</key>
 	<array>
@@ -16,7 +16,7 @@
 		<string>KeyValueStore</string>
 	</array>
 	<key>com.apple.developer.ubiquity-kvstore-identifier</key>
-	<string>$(TeamIdentifierPrefix)app.capybara.browser</string>
+	<string>$(TeamIdentifierPrefix)com.capybara.moon.browser</string>
 	<key>com.apple.security.app-sandbox</key>
 	<false/>
 	<key>com.apple.security.assets.movies.read-only</key>

@@ -16,7 +16,7 @@ extension ModelConfiguration {
             let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = disableCloudKit
                 ? .none
                 : (UserDefaults.standard.bool(forKey: "settings.icloudSyncEnabled") && hasICloudContainer
-                    ? .private("iCloud.com.orabrowser.app")
+                    ? .private("iCloud.com.capybara.moon.browser")
                     : .none)
             return ModelConfiguration(
                 "OraData",

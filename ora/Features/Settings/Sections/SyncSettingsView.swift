@@ -183,7 +183,7 @@ struct SyncSettingsView: View {
         }
 
         do {
-            let status = try await CKContainer(identifier: "iCloud.com.orabrowser.app").accountStatus()
+            let status = try await CKContainer(identifier: "iCloud.com.capybara.moon.browser").accountStatus()
             accountStatus = status
         } catch {
             #if DEBUG

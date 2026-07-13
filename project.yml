@@ -108,13 +108,13 @@ targets:
       path: ora/Info/ora.entitlements
       properties:
         com.apple.developer.icloud-container-identifiers:
-          - iCloud.com.orabrowser.app
+          - iCloud.com.capybara.moon.browser
         com.apple.developer.ubiquity-container-identifiers:
-          - iCloud.com.orabrowser.app
+          - iCloud.com.capybara.moon.browser
         com.apple.developer.icloud-services:
           - CloudKit
           - KeyValueStore
-        com.apple.developer.ubiquity-kvstore-identifier: $(TeamIdentifierPrefix)app.capybara.browser
+        com.apple.developer.ubiquity-kvstore-identifier: $(TeamIdentifierPrefix)com.capybara.moon.browser
         com.apple.security.app-sandbox: false
         com.apple.security.assets.movies.read-only: true
         com.apple.security.assets.music.read-only: true
@@ -138,7 +138,7 @@ targets:
         CURRENT_PROJECT_VERSION: 105
         PRODUCT_NAME: Capy Browser
         PRODUCT_MODULE_NAME: Ora
-        PRODUCT_BUNDLE_IDENTIFIER: com.orabrowser.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.capybara.moon.browser
         GENERATE_INFOPLIST_FILE: YES
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         SUFeedURL: "https://babyskill.github.io/OraBrowser/appcast.xml"
