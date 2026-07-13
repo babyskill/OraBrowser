@@ -16,6 +16,19 @@ final class ApplicationGraph {
         snapshotStore: snapshotStore
     )
 
+    private(set) lazy var systemNotificationMonitor: SystemNotificationMonitor = {
+        let monitor = SystemNotificationMonitor()
+        monitor.onSleep = { [weak self] in self?.windowManager.handleSystemSleep() }
+        monitor.onWake = { [weak self] in self?.windowManager.handleSystemWake() }
+        monitor.onDisplayChange = { [weak self] in
+            guard let self else { return }
+            for window in NSApplication.shared.windows {
+                window.layoutIfNeeded()
+            }
+        }
+        return monitor
+    }()
+
     private(set) lazy var windowPool = WindowPool(
         resetContract: resetContract,
         enabled: windowPoolEnabled
@@ -121,7 +134,9 @@ final class ApplicationGraph {
         )
     }
 
-    private init() {}
+    private init() {
+        _ = systemNotificationMonitor
+    }
 
     // MARK: - Root view controller factory
 

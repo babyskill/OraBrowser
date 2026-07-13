@@ -2,6 +2,16 @@ import AppKit
 import Foundation
 import OSLog
 
+struct CrashHistory {
+    private(set) var timestamps: [Date] = []
+
+    mutating func record(_ date: Date = Date(), within interval: TimeInterval = 10) -> Int {
+        timestamps.removeAll { date.timeIntervalSince($0) > interval }
+        timestamps.append(date)
+        return timestamps.count
+    }
+}
+
 @MainActor
 final class CatalogWindowManager {
     private let registry: CatalogRegistryProtocol
@@ -19,6 +29,7 @@ final class CatalogWindowManager {
     private var windowLeases: [CatalogID: WindowLease] = [:]
     private var pageLeases: [CatalogID: PageLease] = [:]
     private var shellStates: [CatalogID: CatalogShellState] = [:]
+    private var crashHistories: [CatalogID: CrashHistory] = [:]
 
     init(
         registry: CatalogRegistryProtocol,
@@ -138,6 +149,25 @@ final class CatalogWindowManager {
     func closeAll(reason: CloseReason) async {
         for id in Array(windowLeases.keys) {
             await close(id, reason: reason)
+        }
+    }
+
+    func suspendAllBackgroundCatalogs() {
+        resourceManager.suspendBackgroundCatalogs()
+    }
+
+    func handleSystemSleep() {
+        resourceManager.stop()
+        suspendAllBackgroundCatalogs()
+    }
+
+    func handleSystemWake() {
+        resourceManager.start()
+        guard let id = primaryCatalogID() else { return }
+        if let pageLease = pageLeases[id] {
+            pageLease.reload()
+        } else if let windowLease = windowLeases[id], let snapshot = try? registry.snapshot(for: id) {
+            acquirePage(for: snapshot, windowLease: windowLease)
         }
     }
 
@@ -280,6 +310,14 @@ final class CatalogWindowManager {
                         generation: snapshot.generation
                     )
                 }
+                pageLease.onCrash = { [weak self] pageLeaseID, error in
+                    self?.handlePageCrash(
+                        catalogID: snapshot.id,
+                        pageLeaseID: pageLeaseID,
+                        generation: snapshot.generation,
+                        error: error
+                    )
+                }
                 pageLeases[snapshot.id] = pageLease
                 pageLease.browserPage.registerAIActivityHandler(catalogID: snapshot.id, delegate: self)
                 try windowLease.attach(pageLease)
@@ -316,6 +354,44 @@ final class CatalogWindowManager {
             else { return }
             self.shellStates[catalogID]?.setOverlayState(.live)
         }
+    }
+
+    private func handlePageCrash(
+        catalogID: CatalogID,
+        pageLeaseID: PageLeaseID,
+        generation: Int,
+        error: Error?
+    ) {
+        guard pageLeases[catalogID]?.id == pageLeaseID,
+              windowLeases[catalogID]?.generation == generation else { return }
+
+        var history = crashHistories[catalogID] ?? CrashHistory()
+        let crashCount = history.record()
+        crashHistories[catalogID] = history
+
+        guard crashCount > 3 else {
+            pageLeases[catalogID]?.reload()
+            return
+        }
+
+        resourceManager.markCrashed(catalogID: catalogID)
+        do {
+            try registry.markCrashed(catalogID, generation: generation)
+        } catch {
+            logger.error("Failed to persist crashed catalog: \(String(describing: error), privacy: .public)")
+        }
+        shellStates[catalogID]?.setOverlayState(.error(CatalogSurfaceError(
+            message: error?.localizedDescription ?? "The page crashed repeatedly.",
+            isRetryable: true
+        )))
+    }
+
+    private func primaryCatalogID() -> CatalogID? {
+        if let keyWindow = NSApplication.shared.keyWindow, let id = catalogID(for: keyWindow) {
+            return id
+        }
+        return windowLeases.keys.first { resourceManager.state(for: $0)?.isKey == true }
+            ?? windowLeases.keys.first
     }
 
     private func showPageError(

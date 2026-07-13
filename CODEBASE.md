@@ -42,6 +42,8 @@ scripts/                         # Build, release and publishing automation
 | `ora/Core/BrowserEngine/BrowserPage.swift` | `WKWebView` configuration, navigation, scripts and teardown |
 | `ora/Core/BrowserEngine/BrowserPageView.swift` | AppKit host view and SwiftUI bridge for browser pages |
 | `ora/Core/Utilities/WindowFactory.swift` | Imperative `NSWindow` construction helper |
+| `ora/Core/Utilities/SystemNotificationMonitor.swift` | Bridges system sleep, wake, and display-change notifications into callbacks |
+| `ora/Features/Catalog/Windowing/CatalogWindowManager.swift` | Catalog windows/pages, crash backoff, and system sleep/wake resource coordination |
 
 ### Features
 
@@ -53,6 +55,8 @@ scripts/                         # Build, release and publishing automation
 | `ora/Features/Downloads/` | Download persistence, progress and UI |
 | `ora/Features/Settings/` | User-facing application settings |
 | `ora/Features/Catalog/ResourceManager/` | Centralized ResourceManager, PolicyEngine, PressureMonitor, SnapshotStore, and ActivityLease |
+| `oraTests/CrashBackoffTests.swift` | Crash-window counting and reload cutoff tests |
+| `oraTests/SystemNotificationTests.swift` | System sleep, wake, and display notification forwarding tests |
 
 
 
@@ -102,6 +106,7 @@ scripts/                         # Build, release and publishing automation
 - 2026-07-12: Added the detailed Phase 3 WindowPool, ShellResetContract, SnapshotOverlay and lease-separation implementation plan.
 - 2026-07-12: Added the detailed Phase 4 ResourceManager, L0-L5 Hibernation Policy, PressureMonitor, and SnapshotStore implementation plan and tests.
 - 2026-07-13: Added the detailed Phase 5 AI Activity Protection (ActivityLease, UserScripts, and WKScriptMessageHandler) implementation and tests.
+- 2026-07-13: Added Phase 6 crash backoff and system sleep/wake resource handling with tests.
 
 
 

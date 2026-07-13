@@ -40,6 +40,7 @@ struct CatalogResourceState: Sendable {
     var hasActiveActivity: Bool
     var estimatedCost: Double
     var generation: Int
+    var isCrashed: Bool
 
     init(
         catalogID: CatalogID,
@@ -50,7 +51,8 @@ struct CatalogResourceState: Sendable {
         isPinned: Bool = false,
         hasActiveActivity: Bool = false,
         estimatedCost: Double = 150.0,
-        generation: Int = 1
+        generation: Int = 1,
+        isCrashed: Bool = false
     ) {
         self.catalogID = catalogID
         self.level = level
@@ -61,6 +63,7 @@ struct CatalogResourceState: Sendable {
         self.hasActiveActivity = hasActiveActivity
         self.estimatedCost = estimatedCost
         self.generation = generation
+        self.isCrashed = isCrashed
     }
 }
 
@@ -244,6 +247,19 @@ final class ResourceManager {
         states[catalogID] = state
     }
 
+    func markCrashed(catalogID: CatalogID) {
+        guard var state = states[catalogID] else { return }
+        state.isCrashed = true
+        states[catalogID] = state
+    }
+
+    func suspendBackgroundCatalogs() {
+        let backgroundIDs = states.values.filter { !$0.isKey }.map(\.catalogID)
+        for id in backgroundIDs {
+            evictToL4(catalogID: id, ignoringActivityLeases: true)
+        }
+    }
+
     // MARK: - Lease Management
 
     func acquireLease(
@@ -416,9 +432,9 @@ final class ResourceManager {
         }
     }
 
-    private func evictToL4(catalogID: CatalogID) {
+    private func evictToL4(catalogID: CatalogID, ignoringActivityLeases: Bool = false) {
         guard var state = states[catalogID], state.level < .l4DeepHibernation else { return }
-        guard !hasActiveLeases(for: catalogID) else { return }
+        guard ignoringActivityLeases || !hasActiveLeases(for: catalogID) else { return }
 
         state.level = .l4DeepHibernation
         states[catalogID] = state

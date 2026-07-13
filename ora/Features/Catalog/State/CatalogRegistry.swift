@@ -12,6 +12,7 @@ protocol CatalogRegistryProtocol: AnyObject {
     func updateLayout(_ update: CatalogLayoutUpdate) throws
     func markVisible(_ id: CatalogID, generation: Int) throws
     func markHidden(_ id: CatalogID, generation: Int) throws
+    func markCrashed(_ id: CatalogID, generation: Int) throws
     func markClosed(_ id: CatalogID, generation: Int) throws
     func delete(_ id: CatalogID) throws
     func flush() throws
@@ -178,6 +179,18 @@ final class CatalogRegistry: CatalogRegistryProtocol {
             )
         }
         record.lifecycleState = .hidden
+        record.updatedAt = Date()
+        try record.modelContext?.save()
+    }
+
+    func markCrashed(_ id: CatalogID, generation: Int) throws {
+        guard let record = try fetchMutable(id: id) else {
+            throw CatalogRegistryError.notFound(id)
+        }
+        guard record.generation == generation else {
+            throw CatalogRegistryError.staleGeneration(expected: record.generation, received: generation)
+        }
+        record.lifecycleState = .crashed
         record.updatedAt = Date()
         try record.modelContext?.save()
     }
