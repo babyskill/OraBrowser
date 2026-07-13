@@ -114,7 +114,7 @@ targets:
         com.apple.developer.icloud-services:
           - CloudKit
           - KeyValueStore
-        com.apple.developer.ubiquity-kvstore-identifier: com.orabrowser.app
+        com.apple.developer.ubiquity-kvstore-identifier: $(TeamIdentifierPrefix)app.capybara.browser
         com.apple.security.app-sandbox: false
         com.apple.security.assets.movies.read-only: true
         com.apple.security.assets.music.read-only: true
@@ -129,8 +129,6 @@ targets:
         com.apple.security.temporary-exception.mach-lookup.global-name:
           - "$(PRODUCT_BUNDLE_IDENTIFIER)-spks"
           - "$(PRODUCT_BUNDLE_IDENTIFIER)-spki"
-        com.apple.developer.web-browser: true
-        com.apple.developer.web-browser.public-key-credential: true
 
     settings:
       base:
