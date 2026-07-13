@@ -5,7 +5,11 @@ extension ModelConfiguration {
     /// Shared model configuration for the main Ora database
     static func oraDatabase(isPrivate: Bool = false) -> ModelConfiguration {
         if isPrivate {
-            return ModelConfiguration(isStoredInMemoryOnly: true)
+            return ModelConfiguration(
+                "OraDataPrivate",
+                schema: Schema([TabContainer.self, History.self, Download.self, CatalogRecord.self]),
+                isStoredInMemoryOnly: true
+            )
         } else {
             let hasICloudContainer = FileManager.default.url(forUbiquityContainerIdentifier: nil) != nil
             let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = UserDefaults
