@@ -1,7 +1,7 @@
 # OraBrowser — Codebase Map
 
 > **Project Type:** macos | **Tech Stack:** macOS (SwiftUI, WebKit)
-> **Last Synced:** 2026-07-12 (catalog runtime architecture planning)
+> **Last Synced:** 2026-07-13 (Phase 7 runtime hardening)
 
 > [!NOTE]
 > AI PHẢI đọc file này TRƯỚC KHI dùng `grep_search` / `codebase_search` / `list_dir`.
@@ -57,6 +57,7 @@ scripts/                         # Build, release and publishing automation
 | `ora/Features/Catalog/ResourceManager/` | Centralized ResourceManager, PolicyEngine, PressureMonitor, SnapshotStore, and ActivityLease |
 | `oraTests/CrashBackoffTests.swift` | Crash-window counting and reload cutoff tests |
 | `oraTests/SystemNotificationTests.swift` | System sleep, wake, and display notification forwarding tests |
+| `oraTests/HardeningTests.swift` | Phase 7 stress/soak coverage for hibernation and activity-lease feature flags |
 
 
 
@@ -107,6 +108,7 @@ scripts/                         # Build, release and publishing automation
 - 2026-07-12: Added the detailed Phase 4 ResourceManager, L0-L5 Hibernation Policy, PressureMonitor, and SnapshotStore implementation plan and tests.
 - 2026-07-13: Added the detailed Phase 5 AI Activity Protection (ActivityLease, UserScripts, and WKScriptMessageHandler) implementation and tests.
 - 2026-07-13: Added Phase 6 crash backoff and system sleep/wake resource handling with tests.
+- 2026-07-13: Added Phase 7 catalog runtime defaults, hibernation/activity-lease feature flags, and 100-cycle hardening tests.
 
 
 

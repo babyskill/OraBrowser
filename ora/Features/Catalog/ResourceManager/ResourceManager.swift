@@ -116,13 +116,17 @@ final class ResourceManager {
     private var activeEvictions = 0
 
     private let evaluationInterval: TimeInterval
+    private let deepHibernationEnabled: Bool
+    private let aiActivityLeaseEnabled: Bool
 
     init(
         pressureMonitor: PressureMonitor? = nil,
         snapshotStore: SnapshotStore? = nil,
         budgetConfig: BudgetConfig = BudgetConfig.config(for: RAMBudgetMode.current),
         callbacks: ResourceManagerCallbacks = ResourceManagerCallbacks(),
-        evaluationInterval: TimeInterval = 5.0
+        evaluationInterval: TimeInterval = 5.0,
+        deepHibernationEnabled: Bool = true,
+        aiActivityLeaseEnabled: Bool = true
     ) {
         let pm = pressureMonitor ?? PressureMonitor()
         let ss = snapshotStore ?? SnapshotStore()
@@ -131,6 +135,8 @@ final class ResourceManager {
         self.budgetConfig = budgetConfig
         self.callbacks = callbacks
         self.evaluationInterval = evaluationInterval
+        self.deepHibernationEnabled = deepHibernationEnabled
+        self.aiActivityLeaseEnabled = aiActivityLeaseEnabled
 
         pm.onPressureChange = { [weak self] level in
             Task { @MainActor in
@@ -337,15 +343,18 @@ final class ResourceManager {
         let pressureLevel = pressureMonitor.currentLevel
 
         for (catalogID, state) in states where state.level < .l5Recycled {
-            guard !hasActiveLeases(for: catalogID) else { continue }
+            guard !aiActivityLeaseEnabled || !hasActiveLeases(for: catalogID) else { continue }
 
-            let nextLevel = policyEngine.nextLevel(
+            var nextLevel = policyEngine.nextLevel(
                 from: state.level,
                 state: state,
                 config: budgetConfig,
                 now: now,
                 pressureLevel: pressureLevel
             )
+            if !deepHibernationEnabled, nextLevel > .l3Snapshotted {
+                nextLevel = .l3Snapshotted
+            }
 
             guard nextLevel != state.level else { continue }
 
@@ -433,8 +442,9 @@ final class ResourceManager {
     }
 
     private func evictToL4(catalogID: CatalogID, ignoringActivityLeases: Bool = false) {
+        guard deepHibernationEnabled else { return }
         guard var state = states[catalogID], state.level < .l4DeepHibernation else { return }
-        guard ignoringActivityLeases || !hasActiveLeases(for: catalogID) else { return }
+        guard !aiActivityLeaseEnabled || ignoringActivityLeases || !hasActiveLeases(for: catalogID) else { return }
 
         state.level = .l4DeepHibernation
         states[catalogID] = state

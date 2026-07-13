@@ -13,7 +13,9 @@ final class ApplicationGraph {
     private(set) lazy var snapshotStore = SnapshotStore()
     private(set) lazy var resourceManager = ResourceManager(
         pressureMonitor: pressureMonitor,
-        snapshotStore: snapshotStore
+        snapshotStore: snapshotStore,
+        deepHibernationEnabled: deepHibernationEnabled,
+        aiActivityLeaseEnabled: aiActivityLeaseEnabled
     )
 
     private(set) lazy var systemNotificationMonitor: SystemNotificationMonitor = {
@@ -88,7 +90,7 @@ final class ApplicationGraph {
     )
 
     var catalogRuntimeEnabled: Bool {
-        UserDefaults.standard.bool(forKey: "catalogRuntime")
+        featureFlag(named: "catalogRuntime", defaultValue: true)
     }
 
     var windowPoolEnabled: Bool {
@@ -101,6 +103,14 @@ final class ApplicationGraph {
 
     var warmPageLeaseEnabled: Bool {
         featureFlag(named: "warmPageLease", defaultValue: true)
+    }
+
+    var deepHibernationEnabled: Bool {
+        featureFlag(named: "deepHibernation", defaultValue: true)
+    }
+
+    var aiActivityLeaseEnabled: Bool {
+        featureFlag(named: "aiActivityLease", defaultValue: true)
     }
 
     func dependencies(for context: CatalogWindowContext) -> CatalogRootDependencies {
