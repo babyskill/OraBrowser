@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 enum SidebarPosition: String, Hashable {
@@ -14,8 +15,15 @@ class SidebarManager: ObservableObject {
     @Published var secondaryFraction = FractionHolder.usingUserDefaults(0.2, key: "ui.sidebar.fraction.secondary")
     @Published var hiddenSidebar = SideHolder.usingUserDefaults(.primary, key: "ui.sidebar.visibility")
 
+    private var cancellables = Set<AnyCancellable>()
+
     init() {
         hiddenSidebar.side = .primary
+        hiddenSidebar.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
         updateSidebarHidden()
     }
 

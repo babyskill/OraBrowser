@@ -15,10 +15,6 @@ struct URLBar: View {
 
     @Environment(\.theme) private var theme
 
-    // Display mode state
-    @State private var showCopiedAnimation = false
-    @State private var startWheelAnimation = false
-
     // Inline launcher state
     @StateObject private var launcherViewModel = LauncherViewModel()
     @State private var launcherInput = ""
@@ -43,14 +39,6 @@ struct URLBar: View {
         } else {
             return .black
         }
-    }
-
-    private func triggerCopy(_ text: String) {
-        ClipboardUtils.triggerCopy(
-            text,
-            showCopiedAnimation: $showCopiedAnimation,
-            startWheelAnimation: $startWheelAnimation
-        )
     }
 
     var buttonForegroundColor: Color {
@@ -282,69 +270,17 @@ struct URLBar: View {
     // MARK: - URL Display Field (non-editing)
 
     private func urlDisplayField(tab: Tab) -> some View {
-        HStack(spacing: 8) {
-            // Security indicator
-            ZStack {
-                if tab.isLoading {
-                    ProgressView()
-                        .tint(buttonForegroundColor)
-                        .scaleEffect(0.5)
-                } else {
-                    Image(systemName: tab.url.scheme == "https" ? "shield.lefthalf.filled" : "globe")
-                        .font(.system(size: 12))
-                        .foregroundColor(buttonForegroundColor)
-                }
-            }
-            .frame(width: 16, height: 16)
-
-            Spacer()
-
-            ZStack {
-                CopiedURLOverlay(
-                    foregroundColor: buttonForegroundColor,
-                    showCopiedAnimation: $showCopiedAnimation,
-                    startWheelAnimation: $startWheelAnimation
-                )
-
-                // Title display
-                let displayText = tab.title.isEmpty ? (tab.url.host ?? tab.url.absoluteString) : tab.title
-                Text(displayText)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(buttonForegroundColor)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .opacity(showCopiedAnimation ? 0 : 1)
-                    .offset(y: showCopiedAnimation ? (startWheelAnimation ? -12 : 12) : 0)
-                    .animation(.easeOut(duration: 0.3), value: showCopiedAnimation)
-                    .animation(.easeOut(duration: 0.3), value: startWheelAnimation)
-            }
-            .font(.system(size: 13))
+        Text(tab.title)
+            .font(.system(size: 13, weight: .medium))
             .foregroundColor(buttonForegroundColor)
-
-            Spacer()
-
-            Button {
-                if let activeTab = tabManager.activeTab {
-                    triggerCopy(activeTab.url.absoluteString)
-                }
-            } label: {
-                Image(systemName: "link")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(buttonForegroundColor)
-                    .frame(width: 16, height: 16)
-            }
-            .buttonStyle(.plain)
-            .oraShortcutHelp("Copy URL", for: KeyboardShortcuts.Address.copyURL)
-            .accessibilityLabel(Text("Copy URL"))
-        }
-        .frame(height: 30)
-        .padding(.horizontal, 8)
-        .background(
-            ConditionallyConcentricRectangle(cornerRadius: 10, style: .continuous)
-                .fill(buttonForegroundColor.opacity(0.08))
-        )
-        .contentShape(Rectangle())
-        .onTapGesture { startEditing() }
+            .lineLimit(1)
+            .truncationMode(.middle)
+            .frame(maxWidth: .infinity)
+            .frame(height: 30)
+            .contentShape(Rectangle())
+            .onTapGesture { startEditing() }
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint(Text("Edit address"))
     }
 
     // MARK: - Inline Launcher Input (editing)
