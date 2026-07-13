@@ -204,7 +204,7 @@ struct OraCommands: Commands {
         }
 
         CommandGroup(replacing: .appInfo) {
-            Button("About Ora") { showAboutWindow() }
+            Button("About CapyBrowser") { showAboutWindow() }
             Button("Check for Updates") {
                 NotificationCenter.default.post(
                     name: .checkForUpdates,
