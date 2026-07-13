@@ -186,16 +186,26 @@ enum OraBrowserScripts {
             element.__oraAttached = true;
             const update = () => post(stateFrom(element));
             element.addEventListener('play', () => {
+                const hasUserActivation = navigator.userActivation ? navigator.userActivation.hasBeenActive : true;
+                if (!element.muted && element.volume > 0 && hasUserActivation) {
+                    element.__oraWasPlayed = true;
+                }
                 update();
-                element.__oraWasPlayed = true;
             });
             element.addEventListener('pause', update);
             element.addEventListener('ended', () => post({ type: 'ended' }));
-            element.addEventListener('volumechange', () =>
-                post({ type: 'volume', volume: element.muted ? 0 : element.volume })
-            );
+            element.addEventListener('volumechange', () => {
+                const hasUserActivation = navigator.userActivation ? navigator.userActivation.hasBeenActive : true;
+                if (!element.muted && element.volume > 0 && !element.paused && hasUserActivation) {
+                    element.__oraWasPlayed = true;
+                }
+                post({ type: 'volume', volume: element.muted ? 0 : element.volume });
+            });
             if (!element.paused) {
-                element.__oraWasPlayed = true;
+                const hasUserActivation = navigator.userActivation ? navigator.userActivation.hasBeenActive : true;
+                if (!element.muted && element.volume > 0 && hasUserActivation) {
+                    element.__oraWasPlayed = true;
+                }
                 update();
             }
             watchRemoval(element, () => post({ type: 'removed' }));

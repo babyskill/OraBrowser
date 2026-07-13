@@ -175,6 +175,7 @@ struct SidebarView: View {
                 .environmentObject(privacyMode)
                 .environmentObject(toolbarManager)
             }
+            .frame(maxHeight: .infinity)
 
             if shouldShowMediaWidget {
                 GlobalMediaPlayer()
