@@ -7,9 +7,11 @@ extension ModelConfiguration {
         if isPrivate {
             return ModelConfiguration(isStoredInMemoryOnly: true)
         } else {
+            let hasICloudContainer = FileManager.default.url(forUbiquityContainerIdentifier: nil) != nil
             let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = UserDefaults
                 .standard
                 .bool(forKey: "settings.icloudSyncEnabled")
+                && hasICloudContainer
                 ? .private("iCloud.com.orabrowser.app")
                 : .none
             return ModelConfiguration(

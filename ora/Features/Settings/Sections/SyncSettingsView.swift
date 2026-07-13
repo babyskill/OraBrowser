@@ -166,8 +166,19 @@ struct SyncSettingsView: View {
         isCheckingAccount = true
         syncErrorMessage = nil
 
+        let hasUbiquity = await Task.detached {
+            FileManager.default.url(forUbiquityContainerIdentifier: nil) != nil
+        }.value
+
+        guard hasUbiquity else {
+            accountStatus = .couldNotDetermine
+            syncErrorMessage = "iCloud container is unavailable: this build may not have iCloud entitlements."
+            isCheckingAccount = false
+            return
+        }
+
         do {
-            let status = try await CKContainer.default().accountStatus()
+            let status = try await CKContainer(identifier: "iCloud.com.orabrowser.app").accountStatus()
             accountStatus = status
         } catch {
             accountStatus = .couldNotDetermine
